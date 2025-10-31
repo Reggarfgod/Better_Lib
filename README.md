@@ -1,5 +1,5 @@
 
-Core Library for 'Better Villagers' Mod
+Core Library for Better Mods
 This simple core library is designed to support the 'Better Villagers' mod. While it doesn’t add standalone features, it provides essential backend functionality, ensuring smooth and effective operation of the mod.
 
 Features
