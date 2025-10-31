@@ -1,0 +1,1 @@
+Better Lib is a simple library created for my mods. It helps manage shared systems and features across them, and it’s designed to be expandable anyone can use this library to add their own features or compatibility in their mods, making development easier
