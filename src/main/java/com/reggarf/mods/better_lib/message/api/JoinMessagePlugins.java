@@ -1,4 +1,4 @@
-package com.reggarf.mods.better_lib.message.util;
+package com.reggarf.mods.better_lib.message.api;
 
 import java.util.*;
 

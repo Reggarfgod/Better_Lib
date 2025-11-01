@@ -1,6 +1,8 @@
 package com.reggarf.mods.better_lib;
 
 import com.mojang.logging.LogUtils;
+import com.reggarf.mods.better_lib.message.online.OnlineMessageLib;
+import com.reggarf.mods.better_lib.message.util.OnlineMessageHandler;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -19,7 +21,9 @@ public class Better_lib {
     private static final Logger LOGGER = LogUtils.getLogger();
     public Better_lib(IEventBus modEventBus, ModContainer modContainer) {
         NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(new OnlineMessageHandler());
     }
+
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
 

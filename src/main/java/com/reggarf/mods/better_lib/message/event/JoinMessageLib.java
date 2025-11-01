@@ -1,7 +1,7 @@
 package com.reggarf.mods.better_lib.message.event;
 
-import com.reggarf.mods.better_lib.message.util.JoinMessagePlugin;
-import com.reggarf.mods.better_lib.message.util.JoinMessagePlugins;
+import com.reggarf.mods.better_lib.message.api.JoinMessagePlugin;
+import com.reggarf.mods.better_lib.message.api.JoinMessagePlugins;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;

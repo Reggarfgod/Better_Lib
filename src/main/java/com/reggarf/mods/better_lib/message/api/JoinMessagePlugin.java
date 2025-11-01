@@ -1,4 +1,4 @@
-package com.reggarf.mods.better_lib.message.util;
+package com.reggarf.mods.better_lib.message.api;
 
 import com.reggarf.mods.better_lib.message.event.JoinMessageSet;
 import java.util.List;
