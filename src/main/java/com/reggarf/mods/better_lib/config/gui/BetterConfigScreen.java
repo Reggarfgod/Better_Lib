@@ -133,20 +133,17 @@ public class BetterConfigScreen extends Screen {
             if (widget != null) {
                 scrollArea.addEntry(widget, 28);
 
-                // Only add if not already manually added (like dropdowns)
                 boolean alreadyAdded = widgetData.stream().anyMatch(w -> w.fieldName().equals(fieldName));
                 if (!alreadyAdded) {
                     widgetData.add(new WidgetData(fieldName, data.type(), widget));
                 }
             }
 
-
             y += 28;
         }
 
         addRenderableWidget(scrollArea);
 
-        // Footer buttons
         addRenderableWidget(Button.builder(Component.literal("💾 Save & Close"), b -> onSave())
                 .pos(centerX - 105, this.height - 50)
                 .size(100, 20)
@@ -202,7 +199,6 @@ public class BetterConfigScreen extends Screen {
                 Object val = field.get(config);
                 com.google.gson.JsonObject entryObj = new com.google.gson.JsonObject();
 
-                //serialization for Lists and arrays
                 if (val instanceof java.util.List<?> list) {
                     entryObj.add("value", gson.toJsonTree(list));
                 } else if (val != null && val.getClass().isArray()) {
@@ -228,30 +224,24 @@ public class BetterConfigScreen extends Screen {
         }
     }
 
-
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         return scrollArea.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
                 || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
-
-
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         int centerX = this.width / 2;
-        int centerY = this.height / 2;
 
-        // Background
         if (background != null) {
-            RenderSystem.enableBlend();
-            RenderSystem.setShaderTexture(0, background);
-            graphics.blit(background, 0, 0, 0, 0, this.width, this.height, this.width, this.height);
+            RenderCompat.enableBlendSafe();
+            RenderCompat.setShaderTextureSafe(background);
+            RenderCompat.blitSafe(graphics, background, 0, 0, this.width, this.height, this.width, this.height);
         } else {
             graphics.fillGradient(0, 0, width, height, 0xFF0C0C0C, 0xFF202020);
         }
 
-        // Box area for the scroll list
         int boxWidth = 260;
         int boxHeight = height - 160;
         int boxY = 80;
@@ -261,35 +251,123 @@ public class BetterConfigScreen extends Screen {
                 centerX + (boxWidth / 2) + padding, boxY + boxHeight + padding,
                 0xAA000000);
 
-        // Render widgets inside
         super.render(graphics, mouseX, mouseY, delta);
 
-        // Draw header background bar
         graphics.fill(centerX - (boxWidth / 2) - padding, 35,
                 centerX + (boxWidth / 2) + padding, 65, 0xAA000000);
 
-        // Footer background bar
         graphics.fill(centerX - (boxWidth / 2) - padding, height - 60,
                 centerX + (boxWidth / 2) + padding, height - 20, 0xAA000000);
 
-        // Config Title Text
         String modid = (configName != null && !configName.isEmpty()) ? configName : "better_lib";
         String titleKey = "config." + modid + ".title";
         Component title = I18n.exists(titleKey)
                 ? Component.translatable(titleKey)
                 : Component.literal(capitalize(modid) + " Config");
 
-        graphics.drawCenteredString(this.font, title, centerX, 45, 0xFFFFFF);
+        TitleCompat.drawCenteredTitleSafe(graphics, this.font, title, centerX, 45, 0xFFFFFF);
+    }
 
-//
-//        graphics.drawCenteredString(
-//                this.font,
-//                Component.translatable("screen.config.Edit_Settings").copy().withStyle(style -> style.withBold(true)),
-//                centerX, boxY - 22, 0xFFFFFF
-//        );
+    /**
+     * Cross-version title rendering compatibility.
+     * Tries legacy drawCenteredString() first (1.21.4 and below),
+     * then falls back to new textRenderer-based method (1.21.5+).
+     */
+    private static class TitleCompat {
+        public static void drawCenteredTitleSafe(GuiGraphics graphics, net.minecraft.client.gui.Font font, Component title, int centerX, int y, int color) {
+            // Try legacy centered text (1.21.4 and below)
+            try {
+                graphics.drawCenteredString(font, title, centerX, y, color);
+                return;
+            } catch (Throwable ignored) {}
+
+            // 1.21.5+ and NeoForge mappings compatibility
+            try {
+                float textWidth = font.width(title);
+                float x = centerX - (textWidth / 2f);
+
+                // Try the new float-based signature (1.21.5+)
+                try {
+                    var method = GuiGraphics.class.getMethod(
+                            "drawString",
+                            net.minecraft.client.gui.Font.class,
+                            net.minecraft.network.chat.FormattedText.class,
+                            float.class,
+                            float.class,
+                            int.class,
+                            boolean.class
+                    );
+                    method.invoke(graphics, font, (net.minecraft.network.chat.FormattedText) title, x, (float) y, color, false);
+                    return;
+                } catch (NoSuchMethodException ignored2) {}
+
+                // Try fallback: int-based variant (older mappings)
+                try {
+                    var method = GuiGraphics.class.getMethod(
+                            "drawString",
+                            net.minecraft.client.gui.Font.class,
+                            net.minecraft.network.chat.Component.class,
+                            int.class,
+                            int.class,
+                            int.class,
+                            boolean.class
+                    );
+                    method.invoke(graphics, font, title, (int) x, y, color, false);
+                    return;
+                } catch (NoSuchMethodException ignored3) {}
+
+                // Final fallback: manual render (safe even if reflection fails)
+                graphics.drawString(font, title.getString(), (int) x, y, color, false);
+            } catch (Throwable ignored) {
+                // Skip drawing entirely if everything fails
+            }
+        }
     }
 
 
+
+    /**
+     * Universal RenderSystem + GuiGraphics compatibility layer.
+     */
+    private static class RenderCompat {
+        public static void enableBlendSafe() {
+            try {
+                RenderSystem.class.getMethod("defaultBlendFunc").invoke(null);
+            } catch (NoSuchMethodException e) {
+                try {
+                    RenderSystem.class.getMethod("enableBlend").invoke(null);
+                } catch (Exception ignored) {}
+            } catch (Exception ignored) {}
+        }
+
+        public static void setShaderTextureSafe(ResourceLocation texture) {
+            try {
+                RenderSystem.class.getMethod("setShaderTexture", ResourceLocation.class)
+                        .invoke(null, texture);
+            } catch (NoSuchMethodException e) {
+                try {
+                    RenderSystem.class.getMethod("setShaderTexture", int.class, ResourceLocation.class)
+                            .invoke(null, 0, texture);
+                } catch (Exception ignored) {}
+            } catch (Exception ignored) {}
+        }
+
+        public static void blitSafe(GuiGraphics graphics, ResourceLocation texture, int x, int y, int width, int height, int texWidth, int texHeight) {
+            try {
+                // 1.21.8+ (int-based)
+                GuiGraphics.class.getMethod("blit", ResourceLocation.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class)
+                        .invoke(graphics, texture, x, y, 0, 0, width, height, texWidth, texHeight);
+            } catch (NoSuchMethodException e) {
+                try {
+                    // 1.21.4 and below (float-based)
+                    GuiGraphics.class.getMethod("blit", ResourceLocation.class, int.class, int.class, float.class, float.class, int.class, int.class, int.class, int.class)
+                            .invoke(graphics, texture, x, y, 0.0f, 0.0f, width, height, texWidth, texHeight);
+                } catch (Exception ignored) {}
+            } catch (Exception ignored) {}
+        }
+    }
+
+    // --- Utility methods ---
     private Component getLangOrFallback(String key) {
         return I18n.exists(key) ? Component.translatable(key) : Component.literal(key);
     }
@@ -309,18 +387,11 @@ public class BetterConfigScreen extends Screen {
         return key.replaceAll("[^A-Za-z0-9_]", "").trim();
     }
 
-    private record WidgetData(
-            String fieldName,
-            String type,
-            Object widget,
-            String[] options,
-            int[] selectedIndex
-    ) {
+    private record WidgetData(String fieldName, String type, Object widget, String[] options, int[] selectedIndex) {
         public WidgetData(String fieldName, String type, Object widget) {
             this(fieldName, type, widget, new String[0], new int[]{0});
         }
     }
-
     /**
      * Lightweight scrollable area using the same logic as ScrollableTextList.
      */
