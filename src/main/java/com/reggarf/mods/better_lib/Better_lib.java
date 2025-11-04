@@ -1,7 +1,10 @@
 package com.reggarf.mods.better_lib;
 
 import com.mojang.logging.LogUtils;
-import com.reggarf.mods.better_lib.message.online.OnlineMessageLib;
+
+import com.reggarf.mods.better_lib.config.core.BetterConfigManager;
+import com.reggarf.mods.better_lib.config.core.BetterConfigScreenFactory;
+import com.reggarf.mods.better_lib.config.gui.ConfigScreenHandler;
 import com.reggarf.mods.better_lib.message.util.OnlineMessageHandler;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -19,11 +22,27 @@ import org.slf4j.Logger;
 public class Better_lib {
     public static final String MODID = "better_lib";
     private static final Logger LOGGER = LogUtils.getLogger();
+    public static DemoConfig CONFIG;
     public Better_lib(IEventBus modEventBus, ModContainer modContainer) {
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.register(new OnlineMessageHandler());
-    }
+        /// //////////////////////////////////
+        //config register
+        CONFIG = BetterConfigManager.register(DemoConfig.class);
+        modEventBus.addListener(this::onClientSetup);
+        /// ////////////////////////
 
+    }
+    /// /////////////////////////////////////
+    //config screen register
+    private void onClientSetup(FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            ConfigScreenHandler.register("better_lib", parent ->
+                    BetterConfigScreenFactory.from(DemoConfig.class, CONFIG, parent)
+            );
+        });
+    }
+    /// /////////////////////////////////////
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
 
