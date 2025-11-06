@@ -47,7 +47,7 @@ public class BetterConfigScreen extends Screen {
 
         scrollArea = new ConfigScrollArea(panelX, panelY, panelWidth, panelHeight);
 
-        String modid = (configName != null && !configName.isEmpty()) ? configName : "better_lib";
+        String modid = (configName != null && !configName.isEmpty()) ? configName : "assets/better_lib";
         int y = 0;
 
         for (BetterEntryBuilder entry : entries) {
@@ -189,7 +189,7 @@ public class BetterConfigScreen extends Screen {
             java.io.File file = new java.io.File(dir, name + ".json");
 
             com.google.gson.JsonObject root = new com.google.gson.JsonObject();
-            String modid = (name != null && !name.isEmpty()) ? name : "better_lib";
+            String modid = (name != null && !name.isEmpty()) ? name : "assets/better_lib";
             Class<?> clazz = config.getClass();
 
             com.google.gson.Gson gson = new com.google.gson.GsonBuilder().setPrettyPrinting().create();
@@ -199,7 +199,7 @@ public class BetterConfigScreen extends Screen {
                 Object val = field.get(config);
                 com.google.gson.JsonObject entryObj = new com.google.gson.JsonObject();
 
-                if (val instanceof java.util.List<?> list) {
+                if (val instanceof List<?> list) {
                     entryObj.add("value", gson.toJsonTree(list));
                 } else if (val != null && val.getClass().isArray()) {
                     entryObj.add("value", gson.toJsonTree(val));
@@ -259,7 +259,7 @@ public class BetterConfigScreen extends Screen {
         graphics.fill(centerX - (boxWidth / 2) - padding, height - 60,
                 centerX + (boxWidth / 2) + padding, height - 20, 0xAA000000);
 
-        String modid = (configName != null && !configName.isEmpty()) ? configName : "better_lib";
+        String modid = (configName != null && !configName.isEmpty()) ? configName : "assets/better_lib";
         String titleKey = "config." + modid + ".title";
         Component title = I18n.exists(titleKey)
                 ? Component.translatable(titleKey)
@@ -306,7 +306,7 @@ public class BetterConfigScreen extends Screen {
                     var method = GuiGraphics.class.getMethod(
                             "drawString",
                             net.minecraft.client.gui.Font.class,
-                            net.minecraft.network.chat.Component.class,
+                            Component.class,
                             int.class,
                             int.class,
                             int.class,

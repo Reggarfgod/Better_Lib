@@ -4,8 +4,9 @@ import com.reggarf.mods.better_lib.message.api.OnlineMessagePlugin;
 import com.reggarf.mods.better_lib.message.event.OnlineMessageSet;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Works on both pre-1.21.5 and 1.21.5+ NeoForge builds.
  * Supports multiple messages per mod, refetching, and clickable links.
  */
+
 public class OnlineMessageHandler {
 
     private static final Map<String, OnlineMessageSet> CACHE = new ConcurrentHashMap<>();

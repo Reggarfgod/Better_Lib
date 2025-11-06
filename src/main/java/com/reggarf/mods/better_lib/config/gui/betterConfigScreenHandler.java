@@ -1,13 +1,14 @@
 package com.reggarf.mods.better_lib.config.gui;
 
+
 import net.minecraft.client.gui.screens.Screen;
-import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
-import net.neoforged.fml.ModLoadingContext;
+import net.minecraftforge.client.ConfigScreenHandler;
+import net.minecraftforge.fml.ModLoadingContext;
 
 /**
  * Handles registering config screens so the Mods menu "Config" button opens your BetterConfigScreen.
  */
-public class ConfigScreenHandler {
+public class betterConfigScreenHandler {
 
     /**
      * Register a config screen factory for a given mod.
@@ -17,8 +18,8 @@ public class ConfigScreenHandler {
      */
     public static void register(String modId, ConfigScreenFactory factory) {
         ModLoadingContext.get().registerExtensionPoint(
-                IConfigScreenFactory.class,
-                () -> (mc, parent) -> factory.create(parent)
+                ConfigScreenHandler.ConfigScreenFactory.class,
+                () -> new ConfigScreenHandler.ConfigScreenFactory((mc, parent) -> factory.create(parent))
         );
     }
 
