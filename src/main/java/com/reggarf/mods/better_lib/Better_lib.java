@@ -29,28 +29,27 @@ public class Better_lib {
         /// //////////////////////////////////
         //config register
         CONFIG = BetterConfigManager.register(DemoConfig.class);
-        modEventBus.addListener(this::onClientSetup);
         /// ////////////////////////
 
     }
-    /// /////////////////////////////////////
-    //config screen register
-    private void onClientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> {
-            ConfigScreenHandler.register("better_lib", parent ->
-                    BetterConfigScreenFactory.from(DemoConfig.class, CONFIG, parent)
-            );
-        });
-    }
+
     /// /////////////////////////////////////
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
 
     }
+
+     /// /////////////////////////////////////
+    //config screen register
     @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
-        }
+               event.enqueueWork(() -> {
+            ConfigScreenHandler.register("better_lib", parent ->
+                    BetterConfigScreenFactory.from(DemoConfig.class, CONFIG, parent)
+            );
+        });
+      }
     }
 }
