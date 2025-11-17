@@ -21,11 +21,11 @@ public class JoinMessageSet {
     }
 
     public JoinMessageSet addLink(String label, String url, String colorHex, String description) {
-        ClickEvent clickEvent = createUrlClickEvent(url);
+        //ClickEvent clickEvent = createUrlClickEvent(url);
         Component comp = Component.literal(" - ")
                 .append(Component.literal(label)
                         .setStyle(Style.EMPTY
-                                .withClickEvent(clickEvent)
+                                .withClickEvent(new ClickEvent.OpenUrl(URI.create(url)))
                                 .withColor(parseColor(colorHex))
                                 .withUnderlined(true)))
                 .append(Component.literal(description != null ? " " + description : ""));
@@ -60,15 +60,15 @@ public class JoinMessageSet {
      * Uses URI-based constructor if available (1.21.5+),
      * otherwise falls back to the string-based one.
      */
-    private ClickEvent createUrlClickEvent(String url) {
-        try {
-            // Try using the new 1.21.5+ method: ClickEvent.OpenUrl(URI)
-            Class<?> openUrlClass = Class.forName("net.minecraft.network.chat.ClickEvent$OpenUrl");
-            Constructor<?> ctor = openUrlClass.getConstructor(URI.class);
-            return (ClickEvent) ctor.newInstance(URI.create(url));
-        } catch (Throwable ignored) {
-            // Fallback for older versions
-            return new ClickEvent(ClickEvent.Action.OPEN_URL, url);
-        }
-    }
+//    private ClickEvent createUrlClickEvent(String url) {
+//        try {
+//            // Try using the new 1.21.5+ method: ClickEvent.OpenUrl(URI)
+//            Class<?> openUrlClass = Class.forName("net.minecraft.network.chat.ClickEvent$OpenUrl");
+//            Constructor<?> ctor = openUrlClass.getConstructor(URI.class);
+//            return (ClickEvent) ctor.newInstance(URI.create(url));
+//        } catch (Throwable ignored) {
+//            // Fallback for older versions
+//            return new ClickEvent(ClickEvent.Action.OPEN_URL, url);
+//        }
+//    }
 }
