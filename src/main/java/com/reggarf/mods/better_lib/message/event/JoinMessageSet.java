@@ -15,18 +15,18 @@ import static net.minecraft.network.chat.TextColor.fromRgb;
 public class JoinMessageSet {
     private final List<Component> messages = new ArrayList<>();
 
-    public JoinMessageSet addText(String text, String colorHex) {
-        messages.add(Component.literal(text).setStyle(Style.EMPTY.withColor(parseColor(colorHex))));
+    public JoinMessageSet addText(String text, int colorRgb) {
+        messages.add(Component.literal(text).setStyle(Style.EMPTY.withColor(fromRgb(colorRgb))));
         return this;
     }
 
-    public JoinMessageSet addLink(String label, String url, String colorHex, String description) {
+    public JoinMessageSet addLink(String label, String url, int colorRgb, String description) {
         ClickEvent clickEvent = createUrlClickEvent(url);
         Component comp = Component.literal(" - ")
                 .append(Component.literal(label)
                         .setStyle(Style.EMPTY
                                 .withClickEvent(clickEvent)
-                                .withColor(parseColor(colorHex))
+                                .withColor(fromRgb(colorRgb))
                                 .withUnderlined(true)))
                 .append(Component.literal(description != null ? " " + description : ""));
         messages.add(comp);
@@ -44,22 +44,6 @@ public class JoinMessageSet {
         }
     }
 
-    private TextColor parseColor(String hex) {
-        try {
-            if (hex == null) return fromRgb(0xFFFFFF);
-            if (hex.startsWith("#")) hex = hex.substring(1);
-            int rgb = Integer.parseInt(hex, 16);
-            return fromRgb(rgb);
-        } catch (Exception e) {
-            return fromRgb(0xFFFFFF);
-        }
-    }
-
-    /**
-     * Creates a version-safe ClickEvent for opening URLs.
-     * Uses URI-based constructor if available (1.21.5+),
-     * otherwise falls back to the string-based one.
-     */
     private ClickEvent createUrlClickEvent(String url) {
         try {
             // Try using the new 1.21.5+ method: ClickEvent.OpenUrl(URI)
