@@ -12,7 +12,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.capitalize;
 
@@ -24,6 +26,7 @@ public class BetterConfigScreen extends Screen {
     private final String configName;
     private final ResourceLocation background;
     private final List<WidgetData> widgetData = new ArrayList<>();
+    private final Map<String, String> cachedTextValues = new HashMap<>(); // Cache for text values
     private ConfigScrollArea scrollArea;
 
     public BetterConfigScreen(Screen parent, Component title, Object config, List<BetterEntryBuilder> entries, String name, String bgTexture) {
@@ -37,6 +40,13 @@ public class BetterConfigScreen extends Screen {
 
     @Override
     protected void init() {
+        // Cache existing text values before rebuilding
+        cachedTextValues.clear();
+        for (WidgetData wd : widgetData) {
+            if (wd.type().equals("text") && wd.widget() instanceof EditBox eb) {
+                cachedTextValues.put(wd.fieldName(), eb.getValue());
+            }
+        }
         widgetData.clear();
 
         int panelWidth = 250;
@@ -88,10 +98,11 @@ public class BetterConfigScreen extends Screen {
                     };
                     widget.setTooltip(Tooltip.create(tooltipText));
                 }
-             case "text" -> {
+                case "text" -> {
                     EditBox box = new EditBox(font, panelX + 25, 0, 200, 20, label);
-                    box.setValue(data.value().toString());
-                    box.setMaxLength(999999); // REMOVE TEXT LIMIT
+                    box.setMaxLength(999999); // Remove length limit
+                    String lastVal = cachedTextValues.getOrDefault(fieldName, data.value().toString());
+                    box.setValue(lastVal); // Restore cached value
                     widget = box;
                     widget.setTooltip(Tooltip.create(tooltipText));
                 }
@@ -115,20 +126,15 @@ public class BetterConfigScreen extends Screen {
                     widget.setTooltip(Tooltip.create(tooltipText));
                     widgetData.add(new WidgetData(fieldName, "dropdown", widget, options, currentIndex));
                 }
-               case "color" -> {
+                case "color" -> {
                     int color = (Integer) data.value();
-
-                    // Format color as #AARRGGBB
                     String colorHex = String.format("#%08X", color);
 
                     widget = Button.builder(
                                     Component.literal("Color: " + colorHex),
                                     btn -> {
-                                        // Generate a full ARGB random color
                                         int newColor = ((int)(Math.random() * 0xFFFFFF)) | 0xFF000000;
-
                                         String newHex = String.format("#%08X", newColor);
-
                                         btn.setMessage(Component.literal("Color: " + newHex));
                                         btn.setFGColor(newColor);
                                     })
@@ -143,13 +149,11 @@ public class BetterConfigScreen extends Screen {
 
             if (widget != null) {
                 scrollArea.addEntry(widget, 28);
-
                 boolean alreadyAdded = widgetData.stream().anyMatch(w -> w.fieldName().equals(fieldName));
                 if (!alreadyAdded) {
                     widgetData.add(new WidgetData(fieldName, data.type(), widget));
                 }
             }
-
             y += 28;
         }
 
@@ -180,7 +184,7 @@ public class BetterConfigScreen extends Screen {
                         String numberPart = slider.getMessage().getString().replaceAll("[^0-9-]", "");
                         value = Integer.parseInt(numberPart);
                     }
-                    case "text" -> value = ((EditBox) data.widget()).getValue();
+                    case "text" -> value = ((EditBox) data.widget()).getValue(); // Always get full value
                     case "dropdown" -> value = data.options()[data.selectedIndex()[0]];
                     case "color" -> value = ((Button) data.widget()).getFGColor();
                 }
@@ -279,25 +283,17 @@ public class BetterConfigScreen extends Screen {
         TitleCompat.drawCenteredTitleSafe(graphics, this.font, title, centerX, 45, 0xFFFFFF);
     }
 
-    /**
-     * Cross-version title rendering compatibility.
-     * Tries legacy drawCenteredString() first (1.21.4 and below),
-     * then falls back to new textRenderer-based method (1.21.5+).
-     */
     private static class TitleCompat {
         public static void drawCenteredTitleSafe(GuiGraphics graphics, net.minecraft.client.gui.Font font, Component title, int centerX, int y, int color) {
-            // Try legacy centered text (1.21.4 and below)
             try {
                 graphics.drawCenteredString(font, title, centerX, y, color);
                 return;
             } catch (Throwable ignored) {}
 
-            // 1.21.5+ and NeoForge mappings compatibility
             try {
                 float textWidth = font.width(title);
                 float x = centerX - (textWidth / 2f);
 
-                // Try the new float-based signature (1.21.5+)
                 try {
                     var method = GuiGraphics.class.getMethod(
                             "drawString",
@@ -312,7 +308,6 @@ public class BetterConfigScreen extends Screen {
                     return;
                 } catch (NoSuchMethodException ignored2) {}
 
-                // Try fallback: int-based variant (older mappings)
                 try {
                     var method = GuiGraphics.class.getMethod(
                             "drawString",
@@ -327,19 +322,11 @@ public class BetterConfigScreen extends Screen {
                     return;
                 } catch (NoSuchMethodException ignored3) {}
 
-                // Final fallback: manual render (safe even if reflection fails)
                 graphics.drawString(font, title.getString(), (int) x, y, color, false);
-            } catch (Throwable ignored) {
-                // Skip drawing entirely if everything fails
-            }
+            } catch (Throwable ignored) {}
         }
     }
 
-
-
-    /**
-     * Universal RenderSystem + GuiGraphics compatibility layer.
-     */
     private static class RenderCompat {
         public static void enableBlendSafe() {
             try {
@@ -365,12 +352,10 @@ public class BetterConfigScreen extends Screen {
 
         public static void blitSafe(GuiGraphics graphics, ResourceLocation texture, int x, int y, int width, int height, int texWidth, int texHeight) {
             try {
-                // 1.21.8+ (int-based)
                 GuiGraphics.class.getMethod("blit", ResourceLocation.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class)
                         .invoke(graphics, texture, x, y, 0, 0, width, height, texWidth, texHeight);
             } catch (NoSuchMethodException e) {
                 try {
-                    // 1.21.4 and below (float-based)
                     GuiGraphics.class.getMethod("blit", ResourceLocation.class, int.class, int.class, float.class, float.class, int.class, int.class, int.class, int.class)
                             .invoke(graphics, texture, x, y, 0.0f, 0.0f, width, height, texWidth, texHeight);
                 } catch (Exception ignored) {}
@@ -378,7 +363,6 @@ public class BetterConfigScreen extends Screen {
         }
     }
 
-    // --- Utility methods ---
     private Component getLangOrFallback(String key) {
         return I18n.exists(key) ? Component.translatable(key) : Component.literal(key);
     }
@@ -403,19 +387,11 @@ public class BetterConfigScreen extends Screen {
             this(fieldName, type, widget, new String[0], new int[]{0});
         }
     }
-    /**
-     * Lightweight scrollable area using the same logic as ScrollableTextList.
-     */
+
     private static class ConfigScrollArea extends AbstractWidget {
         private final List<Entry> entries = new ArrayList<>();
         private int scrollOffset = 0;
         private final int entrySpacing = 28;
-
-        // Drag support
-        private boolean draggingNumeric = false;
-        private EditBox draggedBox = null;
-        private double lastMouseX = 0;
-        private int baseValue = 0;
 
         public ConfigScrollArea(int x, int y, int width, int height) {
             super(x, y, width, height, Component.empty());
@@ -440,7 +416,6 @@ public class BetterConfigScreen extends Screen {
                 startY += entry.height();
             }
 
-            // Scrollbar
             int contentHeight = entries.size() * entrySpacing;
             if (contentHeight > this.height) {
                 int scrollbarWidth = 6;
@@ -453,17 +428,6 @@ public class BetterConfigScreen extends Screen {
                 graphics.fill(scrollbarX, scrollbarY, scrollbarX + scrollbarWidth, scrollbarY + visibleHeight, 0x44000000);
                 graphics.fill(scrollbarX, thumbY, scrollbarX + scrollbarWidth, thumbY + thumbHeight, 0xAAFFFFFF);
             }
-
-            // If currently dragging, update value smoothly
-            if (draggingNumeric && draggedBox != null) {
-                double currentMouseX = Minecraft.getInstance().mouseHandler.xpos() / Minecraft.getInstance().getWindow().getGuiScaledWidth() * Minecraft.getInstance().getWindow().getScreenWidth();
-                double diff = currentMouseX - lastMouseX;
-                if (Math.abs(diff) > 0.5) {
-                    int delta = (int) (diff / 3); // Adjust sensitivity
-                    int newValue = baseValue + delta;
-                    draggedBox.setValue(String.valueOf(newValue));
-                }
-            }
         }
 
         @Override
@@ -474,19 +438,7 @@ public class BetterConfigScreen extends Screen {
                         mouseY >= widget.getY() && mouseY <= widget.getY() + widget.getHeight();
                 if (inside) {
                     if (widget.mouseClicked(mouseX, mouseY, button)) {
-                        if (widget instanceof EditBox editBox) {
-                            editBox.setFocused(true);
-                            try {
-                                // Start dragging if the value is numeric
-                                Integer.parseInt(editBox.getValue());
-                                draggingNumeric = true;
-                                draggedBox = editBox;
-                                lastMouseX = mouseX;
-                                baseValue = Integer.parseInt(editBox.getValue());
-                            } catch (NumberFormatException ignored) {}
-                        } else {
-                            widget.setFocused(true);
-                        }
+                        widget.setFocused(true);
                         return true;
                     }
                 } else {
@@ -501,15 +453,7 @@ public class BetterConfigScreen extends Screen {
             for (Entry entry : entries) {
                 entry.widget().mouseReleased(mouseX, mouseY, button);
             }
-            draggingNumeric = false;
-            draggedBox = null;
             return false;
-        }
-
-        @Override
-        public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-            // Don't rely on Minecraft's built-in dragging
-            return draggingNumeric || super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         }
 
         @Override
@@ -541,5 +485,4 @@ public class BetterConfigScreen extends Screen {
 
         private record Entry(AbstractWidget widget, int height) {}
     }
-
 }
