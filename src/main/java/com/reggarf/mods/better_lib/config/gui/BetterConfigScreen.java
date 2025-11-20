@@ -88,11 +88,19 @@ public class BetterConfigScreen extends Screen {
                     };
                     widget.setTooltip(Tooltip.create(tooltipText));
                 }
+//                case "text" -> {
+//                    widget = new EditBox(font, panelX + 25, 0, 200, 20, label);
+//                    ((EditBox) widget).setValue(data.value().toString());
+//                    widget.setTooltip(Tooltip.create(tooltipText));
+//                }
                 case "text" -> {
-                    widget = new EditBox(font, panelX + 25, 0, 200, 20, label);
-                    ((EditBox) widget).setValue(data.value().toString());
+                    EditBox box = new EditBox(font, panelX + 25, 0, 200, 20, label);
+                    box.setValue(data.value().toString());
+                    box.setMaxLength(999999); // REMOVE TEXT LIMIT
+                    widget = box;
                     widget.setTooltip(Tooltip.create(tooltipText));
                 }
+
                 case "dropdown" -> {
                     String[] options = data.dropdownValues();
                     String current = data.value().toString();
@@ -113,21 +121,46 @@ public class BetterConfigScreen extends Screen {
                     widget.setTooltip(Tooltip.create(tooltipText));
                     widgetData.add(new WidgetData(fieldName, "dropdown", widget, options, currentIndex));
                 }
+//                case "color" -> {
+//                    int color = (Integer) data.value();
+//                    widget = Button.builder(
+//                                    Component.literal("Color: #" + Integer.toHexString(color).toUpperCase()),
+//                                    btn -> {
+//                                        int newColor = 0xFF000000 | (int) (Math.random() * 0xFFFFFF);
+//                                        btn.setMessage(Component.literal("Color: #" + Integer.toHexString(newColor).toUpperCase()));
+//                                        btn.setFGColor(newColor);
+//                                    })
+//                            .pos(panelX + 25, 0)
+//                            .size(200, 20)
+//                            .build();
+//                    widget.setFGColor(color);
+//                    widget.setTooltip(Tooltip.create(tooltipText));
+//                }
                 case "color" -> {
                     int color = (Integer) data.value();
+
+                    // Format color as #AARRGGBB
+                    String colorHex = String.format("#%08X", color);
+
                     widget = Button.builder(
-                                    Component.literal("Color: #" + Integer.toHexString(color).toUpperCase()),
+                                    Component.literal("Color: " + colorHex),
                                     btn -> {
-                                        int newColor = 0xFF000000 | (int) (Math.random() * 0xFFFFFF);
-                                        btn.setMessage(Component.literal("Color: #" + Integer.toHexString(newColor).toUpperCase()));
+                                        // Generate a full ARGB random color
+                                        int newColor = ((int)(Math.random() * 0xFFFFFF)) | 0xFF000000;
+
+                                        String newHex = String.format("#%08X", newColor);
+
+                                        btn.setMessage(Component.literal("Color: " + newHex));
                                         btn.setFGColor(newColor);
                                     })
                             .pos(panelX + 25, 0)
                             .size(200, 20)
                             .build();
+
                     widget.setFGColor(color);
                     widget.setTooltip(Tooltip.create(tooltipText));
                 }
+
             }
 
             if (widget != null) {
