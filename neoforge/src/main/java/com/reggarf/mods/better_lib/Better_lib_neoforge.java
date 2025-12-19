@@ -22,7 +22,7 @@ public class Better_lib_neoforge {
         CommonClass.init();
 
     }
-    @EventBusSubscriber(modid = Better_lib.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    @EventBusSubscriber(modid = Better_lib.MODID, value = Dist.CLIENT)
     public final class BetterLibClient {
 
         @SubscribeEvent

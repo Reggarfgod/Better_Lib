@@ -22,10 +22,8 @@ dependencies {
     }
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    modImplementation("com.terraformersmc:modmenu:${rootProject.mod_menu_version}") {
-        transitive = false
-    }
-    modImplementation "curse.maven:text-placeholder-api-1037459:6131327"
+    modImplementation "curse.maven:modmenu-308702:6676751"
+    modImplementation "curse.maven:text-placeholder-api-1037459:6612580"
 }
 
 loom {

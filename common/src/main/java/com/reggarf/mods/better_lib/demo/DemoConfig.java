@@ -5,7 +5,7 @@ import com.reggarf.mods.better_lib.config.annotation.ConfigEntry.*;
 import com.reggarf.mods.better_lib.config.api.ConfigData;
 
 import java.util.List;
-@Config(modid = "better_lib", name = "common" , background = "minecraft:textures/block/diamond_block.png")
+@Config(modid = "better_lib", name = "common")
 public class DemoConfig implements ConfigData {
 
     // =========================
