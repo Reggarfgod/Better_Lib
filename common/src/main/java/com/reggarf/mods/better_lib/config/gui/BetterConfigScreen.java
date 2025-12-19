@@ -1,0 +1,513 @@
+package com.reggarf.mods.better_lib.config.gui;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.reggarf.mods.better_lib.config.annotation.Config;
+import com.reggarf.mods.better_lib.config.core.BetterConfigManager;
+import com.reggarf.mods.better_lib.config.helper.BetterEntryBuilder;
+import com.reggarf.mods.better_lib.config.helper.ColorButton;
+import com.reggarf.mods.better_lib.config.helper.ConfigPermissionHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.*;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.apache.commons.lang3.StringUtils.capitalize;
+
+public class BetterConfigScreen extends Screen {
+
+    private final Screen parent;
+    private final Object config;
+    private final List<BetterEntryBuilder> entries;
+    private final String configName;
+    private final ResourceLocation background;
+    private final List<WidgetData> widgetData = new ArrayList<>();
+    private final Map<String, String> cachedTextValues = new HashMap<>();
+    private ConfigScrollArea scrollArea;
+
+    /* ================= ADDED ================= */
+    private final Minecraft mc = Minecraft.getInstance();
+    private boolean canEditServerConfig;
+    /* ======================================== */
+
+    public BetterConfigScreen(Screen parent, Component title, Object config, List<BetterEntryBuilder> entries, String name, String bgTexture) {
+        super(title);
+        this.parent = parent;
+        this.config = config;
+        this.entries = entries;
+        this.configName = name;
+        this.background = bgTexture != null ? ResourceLocation.tryParse(bgTexture) : null;
+    }
+
+
+    @Override
+    protected void init() {
+
+        /* ================= ADDED ================= */
+        this.canEditServerConfig =
+                ConfigPermissionHelper.canClientEditServerConfig(mc);
+
+        /* ======================================== */
+
+        cachedTextValues.clear();
+        for (WidgetData wd : widgetData) {
+            if (wd.type().equals("text") && wd.widget() instanceof EditBox eb) {
+                cachedTextValues.put(wd.fieldName(), eb.getValue());
+            }
+        }
+        widgetData.clear();
+
+        int panelWidth = 250;
+        int panelHeight = height - 180;
+        int centerX = width / 2;
+        int panelX = centerX - (panelWidth / 2);
+        int panelY = 90;
+
+        scrollArea = new ConfigScrollArea(panelX, panelY, panelWidth, panelHeight);
+
+        String modid = (configName != null && !configName.isEmpty()) ? configName : "assets/better_lib";
+
+        for (BetterEntryBuilder entry : entries) {
+            var data = entry.build();
+            String fieldName = sanitizeFieldName(data.label().getString(), modid);
+            String labelKey = "config." + modid + "." + fieldName;
+            String descriptionKey = labelKey + ".tooltip";
+
+            Component label = getLangOrFallback(labelKey);
+            Component tooltipText = getTooltipText("General", descriptionKey);
+
+            AbstractWidget widget = null;
+
+            switch (data.type()) {
+                case "bool" -> {
+                    widget = Checkbox.builder(label, this.font)
+                            .pos(panelX + 25, 0)
+                            .selected((Boolean) data.value())
+                            .build();
+                    widget.setTooltip(Tooltip.create(tooltipText));
+                }
+                case "slider" -> {
+                    int min = data.min();
+                    int max = data.max();
+                    int initial = (Integer) data.value();
+
+                    widget = new AbstractSliderButton(panelX + 25, 0, 200, 20,
+                            Component.literal(label.getString() + ": " + initial),
+                            (initial - min) / (double) (max - min)) {
+                        @Override
+                        protected void updateMessage() {
+                            int val = (int) (min + value * (max - min));
+                            setMessage(Component.literal(label.getString() + ": " + val));
+                        }
+                        @Override protected void applyValue() {}
+                    };
+                    widget.setTooltip(Tooltip.create(tooltipText));
+                }
+                case "text" -> {
+                    EditBox box = new EditBox(font, panelX + 25, 0, 200, 20, label);
+                    box.setMaxLength(999999);
+                    box.setValue(cachedTextValues.getOrDefault(fieldName, data.value().toString()));
+                    widget = box;
+                    widget.setTooltip(Tooltip.create(tooltipText));
+                }
+                case "dropdown" -> {
+                    String[] options = data.dropdownValues();
+                    int index = 0;
+                    for (int i = 0; i < options.length; i++)
+                        if (options[i].equals(data.value().toString())) index = i;
+                    final int[] currentIndex = {index};
+
+                    widget = Button.builder(
+                                    Component.literal(label.getString() + ": " + options[currentIndex[0]]),
+                                    btn -> {
+                                        currentIndex[0] = (currentIndex[0] + 1) % options.length;
+                                        btn.setMessage(Component.literal(label.getString() + ": " + options[currentIndex[0]]));
+                                    })
+                            .pos(panelX + 25, 0)
+                            .size(200, 20)
+                            .build();
+                    widget.setTooltip(Tooltip.create(tooltipText));
+                    widgetData.add(new WidgetData(fieldName, "dropdown", widget, options, currentIndex));
+                }
+                case "color" -> {
+                    int color = (Integer) data.value();
+                    String colorHex = String.format("#%08X", color);
+
+                    ColorButton btn = new ColorButton(
+                            panelX + 25, 0, 200, 20,
+                            Component.literal("Color: " + colorHex),
+                            color,
+                            b -> {
+                                int newColor = ((int)(Math.random() * 0xFFFFFF)) | 0xFF000000;
+                                String newHex = String.format("#%08X", newColor);
+
+                                b.setMessage(Component.literal("Color: " + newHex));
+                                ((ColorButton) b).setColor(newColor);
+                            }
+                    );
+
+                    btn.setTooltip(Tooltip.create(tooltipText));
+                    widget = btn;
+                }
+
+            }
+
+            if (widget != null) {
+
+                /* ================= ADDED ================= */
+                if (!canEditServerConfig) {
+                    widget.active = false;
+                }
+                /* ======================================== */
+
+                scrollArea.addEntry(widget, 28);
+
+                if (widgetData.stream().noneMatch(w -> w.fieldName().equals(fieldName))) {
+                    widgetData.add(new WidgetData(fieldName, data.type(), widget));
+                }
+            }
+        }
+
+        addRenderableWidget(scrollArea);
+
+        Button saveButton = Button.builder(Component.literal("💾 Save & Close"), b -> onSave())
+                .pos(centerX - 105, this.height - 50)
+                .size(100, 20)
+                .build();
+
+        /* ================= ADDED ================= */
+        saveButton.active = canEditServerConfig;
+        /* ======================================== */
+
+        addRenderableWidget(saveButton);
+
+        addRenderableWidget(Button.builder(Component.literal("✖ Cancel"), b -> this.minecraft.setScreen(parent))
+                .pos(centerX + 5, this.height - 50)
+                .size(100, 20)
+                .build());
+    }
+
+    private void onSave() {
+
+        if (!canEditServerConfig) {
+            this.minecraft.setScreen(parent);
+            return;
+        }
+
+        try {
+            Class<?> configClass = config.getClass();
+
+            for (WidgetData data : widgetData) {
+                Field field = configClass.getDeclaredField(data.fieldName());
+                field.setAccessible(true);
+
+                Object value = switch (data.type()) {
+
+                    case "bool" ->
+                            ((Checkbox) data.widget()).selected();
+
+                    case "slider" -> {
+                        String s = ((AbstractSliderButton) data.widget())
+                                .getMessage()
+                                .getString()
+                                .replaceAll("[^0-9-]", "");
+                        yield Integer.parseInt(s);
+                    }
+
+                    case "text" ->
+                            ((EditBox) data.widget()).getValue();
+
+                    case "dropdown" ->
+                            data.options()[data.selectedIndex()[0]];
+
+                    case "color" -> value = ((ColorButton) data.widget()).getColor();
+
+
+                    default -> null;
+                };
+
+                if (value != null) {
+                    field.set(config, value);
+                }
+            }
+
+            BetterConfigManager.save(
+                    getModIdFromConfig(),   // modid
+                    getNameFromConfig(),    // config name
+                    config
+            );
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        this.minecraft.setScreen(parent);
+    }
+
+    private String getModIdFromConfig() {
+        Config cfg = config.getClass().getAnnotation(Config.class);
+        return cfg != null ? cfg.modid() : "unknown";
+    }
+
+    private String getNameFromConfig() {
+        Config cfg = config.getClass().getAnnotation(Config.class);
+        return cfg != null ? cfg.name() : config.getClass().getSimpleName();
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        return scrollArea.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
+                || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        int centerX = this.width / 2;
+
+//        if (background != null) {
+//            RenderCompat.enableBlendSafe();
+//            RenderCompat.setShaderTextureSafe(background);
+//            RenderCompat.blitSafe(graphics, background, 0, 0, this.width, this.height, this.width, this.height);
+//        } else {
+//            graphics.fillGradient(0, 0, width, height, 0xFF0C0C0C, 0xFF202020);
+//        }
+
+        int boxWidth = 260;
+        int boxHeight = height - 160;
+        int boxY = 80;
+        int padding = 10;
+
+        graphics.fill(centerX - (boxWidth / 2) - padding, boxY - padding,
+                centerX + (boxWidth / 2) + padding, boxY + boxHeight + padding,
+                0xAA000000);
+
+        super.render(graphics, mouseX, mouseY, delta);
+
+        graphics.fill(centerX - (boxWidth / 2) - padding, 35,
+                centerX + (boxWidth / 2) + padding, 65, 0xAA000000);
+
+        graphics.fill(centerX - (boxWidth / 2) - padding, height - 60,
+                centerX + (boxWidth / 2) + padding, height - 20, 0xAA000000);
+
+        String modid = (configName != null && !configName.isEmpty()) ? configName : "assets/better_lib";
+        String titleKey = "config." + modid + ".title";
+        Component title = I18n.exists(titleKey)
+                ? Component.translatable(titleKey)
+                : Component.literal(capitalize(modid) + " Config");
+
+        TitleCompat.drawCenteredTitleSafe(graphics, this.font, title, centerX, 45, 0xFFFFFF);
+    }
+
+    private static class TitleCompat {
+        public static void drawCenteredTitleSafe(GuiGraphics graphics, net.minecraft.client.gui.Font font, Component title, int centerX, int y, int color) {
+            try {
+                graphics.drawCenteredString(font, title, centerX, y, color);
+                return;
+            } catch (Throwable ignored) {}
+
+            try {
+                float textWidth = font.width(title);
+                float x = centerX - (textWidth / 2f);
+
+                try {
+                    var method = GuiGraphics.class.getMethod(
+                            "drawString",
+                            net.minecraft.client.gui.Font.class,
+                            net.minecraft.network.chat.FormattedText.class,
+                            float.class,
+                            float.class,
+                            int.class,
+                            boolean.class
+                    );
+                    method.invoke(graphics, font, (net.minecraft.network.chat.FormattedText) title, x, (float) y, color, false);
+                    return;
+                } catch (NoSuchMethodException ignored2) {}
+
+                try {
+                    var method = GuiGraphics.class.getMethod(
+                            "drawString",
+                            net.minecraft.client.gui.Font.class,
+                            Component.class,
+                            int.class,
+                            int.class,
+                            int.class,
+                            boolean.class
+                    );
+                    method.invoke(graphics, font, title, (int) x, y, color, false);
+                    return;
+                } catch (NoSuchMethodException ignored3) {}
+
+                graphics.drawString(font, title.getString(), (int) x, y, color, false);
+            } catch (Throwable ignored) {}
+        }
+    }
+
+    private static class RenderCompat {
+        public static void enableBlendSafe() {
+            try {
+                RenderSystem.class.getMethod("defaultBlendFunc").invoke(null);
+            } catch (NoSuchMethodException e) {
+                try {
+                    RenderSystem.class.getMethod("enableBlend").invoke(null);
+                } catch (Exception ignored) {}
+            } catch (Exception ignored) {}
+        }
+
+        public static void setShaderTextureSafe(ResourceLocation texture) {
+            try {
+                RenderSystem.class.getMethod("setShaderTexture", ResourceLocation.class)
+                        .invoke(null, texture);
+            } catch (NoSuchMethodException e) {
+                try {
+                    RenderSystem.class.getMethod("setShaderTexture", int.class, ResourceLocation.class)
+                            .invoke(null, 0, texture);
+                } catch (Exception ignored) {}
+            } catch (Exception ignored) {}
+        }
+
+        public static void blitSafe(GuiGraphics graphics, ResourceLocation texture, int x, int y, int width, int height, int texWidth, int texHeight) {
+            try {
+                GuiGraphics.class.getMethod("blit", ResourceLocation.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class)
+                        .invoke(graphics, texture, x, y, 0, 0, width, height, texWidth, texHeight);
+            } catch (NoSuchMethodException e) {
+                try {
+                    GuiGraphics.class.getMethod("blit", ResourceLocation.class, int.class, int.class, float.class, float.class, int.class, int.class, int.class, int.class)
+                            .invoke(graphics, texture, x, y, 0.0f, 0.0f, width, height, texWidth, texHeight);
+                } catch (Exception ignored) {}
+            } catch (Exception ignored) {}
+        }
+    }
+
+    private Component getLangOrFallback(String key) {
+        return I18n.exists(key) ? Component.translatable(key) : Component.literal(key);
+    }
+
+    private Component getTooltipText(String category, String tooltipKey) {
+        String text = I18n.exists(tooltipKey) ? I18n.get(tooltipKey) : tooltipKey;
+        return Component.literal("§l" + category + "§r\n" + text);
+    }
+
+    private String sanitizeFieldName(String key, String modid) {
+        key = key.trim();
+        if (key.startsWith("config." + modid + ".")) {
+            key = key.substring(("config." + modid + ".").length());
+        }
+        if (key.contains(".tooltip"))
+            key = key.replace(".tooltip", "");
+        return key.replaceAll("[^A-Za-z0-9_]", "").trim();
+    }
+
+    private record WidgetData(String fieldName, String type, Object widget, String[] options, int[] selectedIndex) {
+        public WidgetData(String fieldName, String type, Object widget) {
+            this(fieldName, type, widget, new String[0], new int[]{0});
+        }
+    }
+
+    private static class ConfigScrollArea extends AbstractWidget {
+        private final List<Entry> entries = new ArrayList<>();
+        private int scrollOffset = 0;
+        private final int entrySpacing = 28;
+
+        public ConfigScrollArea(int x, int y, int width, int height) {
+            super(x, y, width, height, Component.empty());
+        }
+
+        public void addEntry(AbstractWidget widget, int heightStep) {
+            entries.add(new Entry(widget, heightStep));
+        }
+
+        @Override
+        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            int startY = getY() - scrollOffset;
+            int visibleBottom = getY() + getHeight();
+
+            for (Entry entry : entries) {
+                AbstractWidget widget = entry.widget();
+                int widgetY = startY;
+                if (widgetY + entry.height() > getY() && widgetY < visibleBottom) {
+                    widget.setY(widgetY);
+                    widget.render(graphics, mouseX, mouseY, partialTick);
+                }
+                startY += entry.height();
+            }
+
+            int contentHeight = entries.size() * entrySpacing;
+            if (contentHeight > this.height) {
+                int scrollbarWidth = 6;
+                int scrollbarX = getX() + getWidth() - scrollbarWidth - 2;
+                int scrollbarY = getY();
+                int visibleHeight = this.height;
+                float progress = (float) scrollOffset / (float) (contentHeight - visibleHeight);
+                int thumbHeight = Math.max(16, (int) ((float) visibleHeight * visibleHeight / contentHeight));
+                int thumbY = scrollbarY + (int) ((visibleHeight - thumbHeight) * progress);
+                graphics.fill(scrollbarX, scrollbarY, scrollbarX + scrollbarWidth, scrollbarY + visibleHeight, 0x44000000);
+                graphics.fill(scrollbarX, thumbY, scrollbarX + scrollbarWidth, thumbY + thumbHeight, 0xAAFFFFFF);
+            }
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            for (Entry entry : entries) {
+                AbstractWidget widget = entry.widget();
+                boolean inside = mouseX >= widget.getX() && mouseX <= widget.getX() + widget.getWidth() &&
+                        mouseY >= widget.getY() && mouseY <= widget.getY() + widget.getHeight();
+                if (inside) {
+                    if (widget.mouseClicked(mouseX, mouseY, button)) {
+                        widget.setFocused(true);
+                        return true;
+                    }
+                } else {
+                    widget.setFocused(false);
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public boolean mouseReleased(double mouseX, double mouseY, int button) {
+            for (Entry entry : entries) {
+                entry.widget().mouseReleased(mouseX, mouseY, button);
+            }
+            return false;
+        }
+
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            for (Entry entry : entries) {
+                if (entry.widget().keyPressed(keyCode, scanCode, modifiers)) return true;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean charTyped(char codePoint, int modifiers) {
+            for (Entry entry : entries) {
+                if (entry.widget().charTyped(codePoint, modifiers)) return true;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+            int contentHeight = entries.size() * entrySpacing;
+            int maxScroll = Math.max(0, contentHeight - this.height);
+            scrollOffset = Mth.clamp(scrollOffset - (int) (scrollY * 20), 0, maxScroll);
+            return true;
+        }
+
+        @Override
+        protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {}
+
+        private record Entry(AbstractWidget widget, int height) {}
+    }
+}
