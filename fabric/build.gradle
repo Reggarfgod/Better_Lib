@@ -25,6 +25,7 @@ dependencies {
     modImplementation("com.terraformersmc:modmenu:${rootProject.mod_menu_version}") {
         transitive = false
     }
+    modImplementation "curse.maven:text-placeholder-api-1037459:6131327"
 }
 
 loom {
