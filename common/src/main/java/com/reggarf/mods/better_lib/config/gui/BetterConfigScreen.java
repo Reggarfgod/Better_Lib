@@ -1,6 +1,5 @@
 package com.reggarf.mods.better_lib.config.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.reggarf.mods.better_lib.config.annotation.Config;
 import com.reggarf.mods.better_lib.config.core.BetterConfigManager;
 import com.reggarf.mods.better_lib.config.helper.BetterEntryBuilder;
@@ -12,6 +11,7 @@ import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -35,10 +35,9 @@ public class BetterConfigScreen extends Screen {
     private final Map<String, String> cachedTextValues = new HashMap<>();
     private ConfigScrollArea scrollArea;
 
-    /* ================= ADDED ================= */
     private final Minecraft mc = Minecraft.getInstance();
     private boolean canEditServerConfig;
-    /* ======================================== */
+
 
     public BetterConfigScreen(Screen parent, Component title, Object config, List<BetterEntryBuilder> entries, String name, String bgTexture) {
         super(title);
@@ -57,7 +56,6 @@ public class BetterConfigScreen extends Screen {
         this.canEditServerConfig =
                 ConfigPermissionHelper.canClientEditServerConfig(mc);
 
-        /* ======================================== */
 
         cachedTextValues.clear();
         for (WidgetData wd : widgetData) {
@@ -287,105 +285,20 @@ public class BetterConfigScreen extends Screen {
         int boxY = 80;
         int padding = 10;
 
-        graphics.fill(centerX - (boxWidth / 2) - padding, boxY - padding,
-                centerX + (boxWidth / 2) + padding, boxY + boxHeight + padding,
-                0xAA000000);
+
+        graphics.fill(centerX - (boxWidth / 2) - padding, boxY - padding, centerX + (boxWidth / 2) + padding, boxY + boxHeight + padding, 0xAA000000);
+        graphics.fill(centerX - (boxWidth / 2) - padding, 35, centerX + (boxWidth / 2) + padding, 65, 0xAA000000);
+        graphics.fill(centerX - (boxWidth / 2) - padding, height - 60, centerX + (boxWidth / 2) + padding, height - 20, 0xAA000000);
 
         super.render(graphics, mouseX, mouseY, delta);
 
-        graphics.fill(centerX - (boxWidth / 2) - padding, 35,
-                centerX + (boxWidth / 2) + padding, 65, 0xAA000000);
-
-        graphics.fill(centerX - (boxWidth / 2) - padding, height - 60,
-                centerX + (boxWidth / 2) + padding, height - 20, 0xAA000000);
-
-        String modid = (configName != null && !configName.isEmpty()) ? configName : "assets/better_lib";
+        String modid = (configName != null && !configName.isEmpty()) ? configName : "better_lib";
         String titleKey = "config." + modid + ".title";
-        Component title = I18n.exists(titleKey)
+        Component title = Language.getInstance().has(titleKey)
                 ? Component.translatable(titleKey)
                 : Component.literal(capitalize(modid) + " Config");
 
-        TitleCompat.drawCenteredTitleSafe(graphics, this.font, title, centerX, 45, 0xFFFFFF);
-    }
-
-    private static class TitleCompat {
-        public static void drawCenteredTitleSafe(GuiGraphics graphics, net.minecraft.client.gui.Font font, Component title, int centerX, int y, int color) {
-            try {
-                graphics.drawCenteredString(font, title, centerX, y, color);
-                return;
-            } catch (Throwable ignored) {}
-
-            try {
-                float textWidth = font.width(title);
-                float x = centerX - (textWidth / 2f);
-
-                try {
-                    var method = GuiGraphics.class.getMethod(
-                            "drawString",
-                            net.minecraft.client.gui.Font.class,
-                            net.minecraft.network.chat.FormattedText.class,
-                            float.class,
-                            float.class,
-                            int.class,
-                            boolean.class
-                    );
-                    method.invoke(graphics, font, (net.minecraft.network.chat.FormattedText) title, x, (float) y, color, false);
-                    return;
-                } catch (NoSuchMethodException ignored2) {}
-
-                try {
-                    var method = GuiGraphics.class.getMethod(
-                            "drawString",
-                            net.minecraft.client.gui.Font.class,
-                            Component.class,
-                            int.class,
-                            int.class,
-                            int.class,
-                            boolean.class
-                    );
-                    method.invoke(graphics, font, title, (int) x, y, color, false);
-                    return;
-                } catch (NoSuchMethodException ignored3) {}
-
-                graphics.drawString(font, title.getString(), (int) x, y, color, false);
-            } catch (Throwable ignored) {}
-        }
-    }
-
-    private static class RenderCompat {
-        public static void enableBlendSafe() {
-            try {
-                RenderSystem.class.getMethod("defaultBlendFunc").invoke(null);
-            } catch (NoSuchMethodException e) {
-                try {
-                    RenderSystem.class.getMethod("enableBlend").invoke(null);
-                } catch (Exception ignored) {}
-            } catch (Exception ignored) {}
-        }
-
-        public static void setShaderTextureSafe(ResourceLocation texture) {
-            try {
-                RenderSystem.class.getMethod("setShaderTexture", ResourceLocation.class)
-                        .invoke(null, texture);
-            } catch (NoSuchMethodException e) {
-                try {
-                    RenderSystem.class.getMethod("setShaderTexture", int.class, ResourceLocation.class)
-                            .invoke(null, 0, texture);
-                } catch (Exception ignored) {}
-            } catch (Exception ignored) {}
-        }
-
-        public static void blitSafe(GuiGraphics graphics, ResourceLocation texture, int x, int y, int width, int height, int texWidth, int texHeight) {
-            try {
-                GuiGraphics.class.getMethod("blit", ResourceLocation.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class)
-                        .invoke(graphics, texture, x, y, 0, 0, width, height, texWidth, texHeight);
-            } catch (NoSuchMethodException e) {
-                try {
-                    GuiGraphics.class.getMethod("blit", ResourceLocation.class, int.class, int.class, float.class, float.class, int.class, int.class, int.class, int.class)
-                            .invoke(graphics, texture, x, y, 0.0f, 0.0f, width, height, texWidth, texHeight);
-                } catch (Exception ignored) {}
-            } catch (Exception ignored) {}
-        }
+        graphics.drawCenteredString(this.font, title, centerX, 45, 0xFFFFFFFF);
     }
 
     private Component getLangOrFallback(String key) {
@@ -414,9 +327,13 @@ public class BetterConfigScreen extends Screen {
     }
 
     private static class ConfigScrollArea extends AbstractWidget {
+
         private final List<Entry> entries = new ArrayList<>();
         private int scrollOffset = 0;
         private final int entrySpacing = 28;
+
+        // REQUIRED since 1.21.9+
+        private AbstractWidget focusedWidget;
 
         public ConfigScrollArea(int x, int y, int width, int height) {
             super(x, y, width, height, Component.empty());
@@ -426,6 +343,8 @@ public class BetterConfigScreen extends Screen {
             entries.add(new Entry(widget, heightStep));
         }
 
+        /* ================= RENDER (UNCHANGED LOGIC) ================= */
+
         @Override
         public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
             int startY = getY() - scrollOffset;
@@ -434,10 +353,12 @@ public class BetterConfigScreen extends Screen {
             for (Entry entry : entries) {
                 AbstractWidget widget = entry.widget();
                 int widgetY = startY;
+
                 if (widgetY + entry.height() > getY() && widgetY < visibleBottom) {
                     widget.setY(widgetY);
                     widget.render(graphics, mouseX, mouseY, partialTick);
                 }
+
                 startY += entry.height();
             }
 
@@ -447,62 +368,88 @@ public class BetterConfigScreen extends Screen {
                 int scrollbarX = getX() + getWidth() - scrollbarWidth - 2;
                 int scrollbarY = getY();
                 int visibleHeight = this.height;
+
                 float progress = (float) scrollOffset / (float) (contentHeight - visibleHeight);
-                int thumbHeight = Math.max(16, (int) ((float) visibleHeight * visibleHeight / contentHeight));
+                int thumbHeight = Math.max(16,
+                        (int) ((float) visibleHeight * visibleHeight / contentHeight));
                 int thumbY = scrollbarY + (int) ((visibleHeight - thumbHeight) * progress);
-                graphics.fill(scrollbarX, scrollbarY, scrollbarX + scrollbarWidth, scrollbarY + visibleHeight, 0x44000000);
-                graphics.fill(scrollbarX, thumbY, scrollbarX + scrollbarWidth, thumbY + thumbHeight, 0xAAFFFFFF);
+
+                graphics.fill(scrollbarX, scrollbarY,
+                        scrollbarX + scrollbarWidth, scrollbarY + visibleHeight, 0x44000000);
+                graphics.fill(scrollbarX, thumbY,
+                        scrollbarX + scrollbarWidth, thumbY + thumbHeight, 0xAAFFFFFF);
             }
         }
 
+        /* ================= 1.21.9+ INPUT HANDLING ================= */
+
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
+
+            // Vanilla behavior: ignore clicks outside the scroll area
+            if (!this.isMouseOver(mouseX, mouseY)) {
+                clearFocus();
+                return false;
+            }
+
             for (Entry entry : entries) {
                 AbstractWidget widget = entry.widget();
-                boolean inside = mouseX >= widget.getX() && mouseX <= widget.getX() + widget.getWidth() &&
-                        mouseY >= widget.getY() && mouseY <= widget.getY() + widget.getHeight();
-                if (inside) {
-                    if (widget.mouseClicked(mouseX, mouseY, button)) {
-                        widget.setFocused(true);
-                        return true;
-                    }
+
+                if (!widget.visible || !widget.active) continue;
+
+                // IMPORTANT: use isMouseOver(), not manual bounds
+                if (widget.isMouseOver(mouseX, mouseY)) {
+                    focusedWidget = widget;
+                    widget.setFocused(true);
+                    return widget.mouseClicked(mouseX, mouseY, button);
                 } else {
                     widget.setFocused(false);
                 }
             }
+
+            focusedWidget = null;
             return false;
+        }
+
+        @Override
+        public boolean mouseDragged(double mouseX, double mouseY,
+                                    int button, double deltaX, double deltaY) {
+            return focusedWidget != null &&
+                    focusedWidget.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
         }
 
         @Override
         public boolean mouseReleased(double mouseX, double mouseY, int button) {
-            for (Entry entry : entries) {
-                entry.widget().mouseReleased(mouseX, mouseY, button);
-            }
-            return false;
+            return focusedWidget != null &&
+                    focusedWidget.mouseReleased(mouseX, mouseY, button);
         }
 
         @Override
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            for (Entry entry : entries) {
-                if (entry.widget().keyPressed(keyCode, scanCode, modifiers)) return true;
-            }
-            return false;
+            return focusedWidget != null &&
+                    focusedWidget.keyPressed(keyCode, scanCode, modifiers);
         }
 
         @Override
         public boolean charTyped(char codePoint, int modifiers) {
-            for (Entry entry : entries) {
-                if (entry.widget().charTyped(codePoint, modifiers)) return true;
-            }
-            return false;
+            return focusedWidget != null &&
+                    focusedWidget.charTyped(codePoint, modifiers);
         }
 
         @Override
-        public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        public boolean mouseScrolled(double mouseX, double mouseY,
+                                     double scrollX, double scrollY) {
             int contentHeight = entries.size() * entrySpacing;
             int maxScroll = Math.max(0, contentHeight - this.height);
             scrollOffset = Mth.clamp(scrollOffset - (int) (scrollY * 20), 0, maxScroll);
             return true;
+        }
+
+        private void clearFocus() {
+            if (focusedWidget != null) {
+                focusedWidget.setFocused(false);
+                focusedWidget = null;
+            }
         }
 
         @Override
@@ -510,4 +457,5 @@ public class BetterConfigScreen extends Screen {
 
         private record Entry(AbstractWidget widget, int height) {}
     }
+
 }
