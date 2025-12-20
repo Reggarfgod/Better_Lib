@@ -10,8 +10,8 @@ import com.reggarf.mods.better_lib.message.online.OnlineMessageLib;
 public class CommonClass {
     public static DemoConfig CONFIG;
     public static void init() {
-        OnlineMessageLib.registerPlugin(new DemoOnlineMessages());
-        DemoPlugin.register();
+        //OnlineMessageLib.registerPlugin(new DemoOnlineMessages());
+        //DemoPlugin.register();
         CONFIG = BetterConfigManager.register(DemoConfig.class);
     }
 }
