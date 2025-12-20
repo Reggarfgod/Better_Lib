@@ -35,8 +35,7 @@
     "fabricloader": ">=${fabric_loader_version}",
     "fabric-api": "*",
     "minecraft": ">=1.21.1 <1.22",
-    "java": ">=${java_version}",
-    "placeholder-api": ">=2.4.0"
+    "java": ">=${java_version}"
   },
 
   "suggests": {
