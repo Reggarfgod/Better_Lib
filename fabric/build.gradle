@@ -4,13 +4,6 @@ plugins {
 }
 repositories {
     maven {
-        url "https://maven.terraformersmc.com/"
-        content {
-            includeGroup "dev.emi"
-            includeGroup "com.terraformersmc"
-        }
-    }
-    maven {
         url "https://cursemaven.com"
     }
 }
@@ -22,8 +15,7 @@ dependencies {
     }
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    modImplementation "curse.maven:modmenu-308702:6676751"
-    modImplementation "curse.maven:text-placeholder-api-1037459:6612580"
+    modImplementation "curse.maven:modmenu-308702:7059741"
 }
 
 loom {

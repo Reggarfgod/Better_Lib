@@ -11,6 +11,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
@@ -56,9 +59,10 @@ public class BetterConfigScreen extends Screen {
     protected void init() {
 
         /* ================= ADDED ================= */
+        this.clearWidgets();
+
         this.canEditServerConfig =
                 ConfigPermissionHelper.canClientEditServerConfig(mc);
-
         /* ======================================== */
 
         cachedTextValues.clear();
@@ -180,7 +184,7 @@ public class BetterConfigScreen extends Screen {
             }
         }
 
-        addRenderableWidget(scrollArea);
+        addWidget(scrollArea);
 
         Button saveButton = Button.builder(Component.literal("💾 Save & Close"), b -> onSave())
                 .pos(centerX - 105, this.height - 50)
@@ -267,10 +271,35 @@ public class BetterConfigScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        return scrollArea.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
-                || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        return scrollArea.mouseClicked(event, doubleClick)
+                || super.mouseClicked(event, doubleClick);
     }
+
+    @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        return scrollArea.mouseReleased(event)
+                || super.mouseReleased(event);
+    }
+
+    @Override
+    public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+        return scrollArea.mouseDragged(event, dx, dy)
+                || super.mouseDragged(event, dx, dy);
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        return scrollArea.keyPressed(event)
+                || super.keyPressed(event);
+    }
+
+    @Override
+    public boolean charTyped(CharacterEvent event) {
+        return scrollArea.charTyped(event)
+                || super.charTyped(event);
+    }
+
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
@@ -336,7 +365,6 @@ public class BetterConfigScreen extends Screen {
         private int scrollOffset = 0;
         private final int entrySpacing = 28;
 
-        // REQUIRED since 1.21.9+
         private AbstractWidget focusedWidget;
 
         public ConfigScrollArea(int x, int y, int width, int height) {
@@ -347,7 +375,7 @@ public class BetterConfigScreen extends Screen {
             entries.add(new Entry(widget, heightStep));
         }
 
-        /* ================= RENDER (UNCHANGED LOGIC) ================= */
+        /* ================= RENDER ================= */
 
         @Override
         public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
@@ -359,38 +387,22 @@ public class BetterConfigScreen extends Screen {
                 int widgetY = startY;
 
                 if (widgetY + entry.height() > getY() && widgetY < visibleBottom) {
+                    widget.setX(getX() + 10);
                     widget.setY(widgetY);
                     widget.render(graphics, mouseX, mouseY, partialTick);
                 }
 
                 startY += entry.height();
             }
-
-            int contentHeight = entries.size() * entrySpacing;
-            if (contentHeight > this.height) {
-                int scrollbarWidth = 6;
-                int scrollbarX = getX() + getWidth() - scrollbarWidth - 2;
-                int scrollbarY = getY();
-                int visibleHeight = this.height;
-
-                float progress = (float) scrollOffset / (float) (contentHeight - visibleHeight);
-                int thumbHeight = Math.max(16,
-                        (int) ((float) visibleHeight * visibleHeight / contentHeight));
-                int thumbY = scrollbarY + (int) ((visibleHeight - thumbHeight) * progress);
-
-                graphics.fill(scrollbarX, scrollbarY,
-                        scrollbarX + scrollbarWidth, scrollbarY + visibleHeight, 0x44000000);
-                graphics.fill(scrollbarX, thumbY,
-                        scrollbarX + scrollbarWidth, thumbY + thumbHeight, 0xAAFFFFFF);
-            }
         }
 
-        /* ================= 1.21.9+ INPUT HANDLING ================= */
+        /* ================= INPUT (FIXED) ================= */
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+            double mouseX = event.x();
+            double mouseY = event.y();
 
-            // Vanilla behavior: ignore clicks outside the scroll area
             if (!this.isMouseOver(mouseX, mouseY)) {
                 clearFocus();
                 return false;
@@ -401,52 +413,54 @@ public class BetterConfigScreen extends Screen {
 
                 if (!widget.visible || !widget.active) continue;
 
-                // IMPORTANT: use isMouseOver(), not manual bounds
                 if (widget.isMouseOver(mouseX, mouseY)) {
-                    focusedWidget = widget;
-                    widget.setFocused(true);
-                    return widget.mouseClicked(mouseX, mouseY, button);
-                } else {
-                    widget.setFocused(false);
+                    setFocusedWidget(widget);
+                    return widget.mouseClicked(event, doubleClick);
                 }
             }
 
-            focusedWidget = null;
+            clearFocus();
             return false;
         }
 
         @Override
-        public boolean mouseDragged(double mouseX, double mouseY,
-                                    int button, double deltaX, double deltaY) {
-            return focusedWidget != null &&
-                    focusedWidget.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        public boolean mouseReleased(MouseButtonEvent event) {
+            return focusedWidget != null && focusedWidget.mouseReleased(event);
         }
 
         @Override
-        public boolean mouseReleased(double mouseX, double mouseY, int button) {
-            return focusedWidget != null &&
-                    focusedWidget.mouseReleased(mouseX, mouseY, button);
+        public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+            return focusedWidget != null && focusedWidget.mouseDragged(event, dx, dy);
         }
 
         @Override
-        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            return focusedWidget != null &&
-                    focusedWidget.keyPressed(keyCode, scanCode, modifiers);
-        }
-
-        @Override
-        public boolean charTyped(char codePoint, int modifiers) {
-            return focusedWidget != null &&
-                    focusedWidget.charTyped(codePoint, modifiers);
-        }
-
-        @Override
-        public boolean mouseScrolled(double mouseX, double mouseY,
-                                     double scrollX, double scrollY) {
+        public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
             int contentHeight = entries.size() * entrySpacing;
             int maxScroll = Math.max(0, contentHeight - this.height);
-            scrollOffset = Mth.clamp(scrollOffset - (int) (scrollY * 20), 0, maxScroll);
+            scrollOffset = Mth.clamp(scrollOffset - (int)(scrollY * 20), 0, maxScroll);
             return true;
+        }
+
+        @Override
+        public boolean keyPressed(KeyEvent event) {
+            return focusedWidget != null && focusedWidget.keyPressed(event);
+        }
+
+
+        @Override
+        public boolean charTyped(CharacterEvent event) {
+            return focusedWidget != null && focusedWidget.charTyped(event);
+        }
+
+
+        /* ================= FOCUS ================= */
+
+        private void setFocusedWidget(AbstractWidget widget) {
+            if (focusedWidget != null)
+                focusedWidget.setFocused(false);
+
+            focusedWidget = widget;
+            widget.setFocused(true);
         }
 
         private void clearFocus() {
@@ -457,9 +471,10 @@ public class BetterConfigScreen extends Screen {
         }
 
         @Override
-        protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {}
+        protected void updateWidgetNarration(NarrationElementOutput narration) {}
 
         private record Entry(AbstractWidget widget, int height) {}
     }
+
 
 }

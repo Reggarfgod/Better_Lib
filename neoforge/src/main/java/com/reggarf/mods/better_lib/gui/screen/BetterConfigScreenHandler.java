@@ -16,8 +16,7 @@ public class BetterConfigScreenHandler {
      * @param factory function that creates your config screen
      */
     public static void register(String modId, ConfigScreenFactory factory) {
-        ModLoadingContext.get().registerExtensionPoint(
-                IConfigScreenFactory.class,
+        ModLoadingContext.get().registerExtensionPoint(IConfigScreenFactory.class,
                 () -> (mc, parent) -> factory.create(parent)
         );
     }
