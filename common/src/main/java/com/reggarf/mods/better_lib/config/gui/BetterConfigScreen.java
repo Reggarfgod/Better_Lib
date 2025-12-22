@@ -184,7 +184,7 @@ public class BetterConfigScreen extends Screen {
             }
         }
 
-        addWidget(scrollArea);
+        addRenderableWidget(scrollArea);
 
         Button saveButton = Button.builder(Component.literal("💾 Save & Close"), b -> onSave())
                 .pos(centerX - 105, this.height - 50)
