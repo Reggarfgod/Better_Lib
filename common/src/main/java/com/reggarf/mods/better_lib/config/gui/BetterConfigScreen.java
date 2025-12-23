@@ -4,7 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.reggarf.mods.better_lib.config.annotation.Config;
 import com.reggarf.mods.better_lib.config.core.BetterConfigManager;
 import com.reggarf.mods.better_lib.config.helper.BetterEntryBuilder;
-import com.reggarf.mods.better_lib.config.helper.ColorButton;
+
 import com.reggarf.mods.better_lib.config.helper.ConfigPermissionHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -17,7 +17,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+
 import net.minecraft.util.Mth;
 
 import java.lang.reflect.Field;
@@ -34,7 +34,7 @@ public class BetterConfigScreen extends Screen {
     private final Object config;
     private final List<BetterEntryBuilder> entries;
     private final String configName;
-    private final ResourceLocation background;
+    //private final ResourceLocation background;
     private final List<WidgetData> widgetData = new ArrayList<>();
     private final Map<String, String> cachedTextValues = new HashMap<>();
     private ConfigScrollArea scrollArea;
@@ -51,7 +51,7 @@ public class BetterConfigScreen extends Screen {
         this.config = config;
         this.entries = entries;
         this.configName = name;
-        this.background = bgTexture != null ? ResourceLocation.tryParse(bgTexture) : null;
+        //this.background = bgTexture != null ? ResourceLocation.tryParse(bgTexture) : null;
     }
 
 
@@ -143,28 +143,51 @@ public class BetterConfigScreen extends Screen {
                             .size(200, 20)
                             .build();
                     widget.setTooltip(Tooltip.create(tooltipText));
-                    widgetData.add(new WidgetData(fieldName, "dropdown", widget, options, currentIndex));
+                    widgetData.add(new WidgetData(
+                            fieldName,
+                            "dropdown",
+                            widget,
+                            options,
+                            currentIndex,
+                            new int[]{0} // colorHolder (unused here)
+                    ));
                 }
                 case "color" -> {
-                    int color = (Integer) data.value();
-                    String colorHex = String.format("#%08X", color);
+                    int initialColor = (Integer) data.value();
+                    int[] colorHolder = new int[]{ initialColor };
 
-                    ColorButton btn = new ColorButton(
-                            panelX + 25, 0, 200, 20,
-                            Component.literal("Color: " + colorHex),
-                            color,
+                    String hex = String.format("#%08X", initialColor);
+
+                    Button btn = Button.builder(
+                            Component.literal("Color: " + hex)
+                                    .withStyle(s -> s.withColor(initialColor)),
                             b -> {
-                                int newColor = ((int)(Math.random() * 0xFFFFFF)) | 0xFF000000;
+                                int newColor =
+                                        ((int) (Math.random() * 0xFFFFFF)) | 0xFF000000;
+
+                                colorHolder[0] = newColor; // ✅ STORE VALUE
+
                                 String newHex = String.format("#%08X", newColor);
 
-                                b.setMessage(Component.literal("Color: " + newHex));
-                                ((ColorButton) b).setColor(newColor);
+                                b.setMessage(
+                                        Component.literal("Color: " + newHex)
+                                                .withStyle(s -> s.withColor(newColor))
+                                );
                             }
-                    );
+                    ).pos(panelX + 25, 0).size(200, 20).build();
 
-                    btn.setTooltip(Tooltip.create(tooltipText));
                     widget = btn;
+
+                    widgetData.add(new WidgetData(
+                            fieldName,
+                            "color",
+                            btn,
+                            new String[0],
+                            new int[]{0},
+                            colorHolder
+                    ));
                 }
+
 
             }
 
@@ -236,11 +259,12 @@ public class BetterConfigScreen extends Screen {
                     case "dropdown" ->
                             data.options()[data.selectedIndex()[0]];
 
-                    case "color" -> value = ((ColorButton) data.widget()).getColor();
-
+                    case "color" ->
+                            data.colorHolder()[0];
 
                     default -> null;
                 };
+
 
                 if (value != null) {
                     field.set(config, value);
@@ -353,11 +377,19 @@ public class BetterConfigScreen extends Screen {
         return key.replaceAll("[^A-Za-z0-9_]", "").trim();
     }
 
-    private record WidgetData(String fieldName, String type, Object widget, String[] options, int[] selectedIndex) {
+    private record WidgetData(
+            String fieldName,
+            String type,
+            Object widget,
+            String[] options,
+            int[] selectedIndex,
+            int[] colorHolder
+    ) {
         public WidgetData(String fieldName, String type, Object widget) {
-            this(fieldName, type, widget, new String[0], new int[]{0});
+            this(fieldName, type, widget, new String[0], new int[]{0}, new int[]{0});
         }
     }
+
 
     private static class ConfigScrollArea extends AbstractWidget {
 

@@ -15,7 +15,7 @@ dependencies {
     }
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    modImplementation "curse.maven:modmenu-308702:7059741"
+    modImplementation "curse.maven:modmenu-308702:7363966"
 }
 
 loom {
