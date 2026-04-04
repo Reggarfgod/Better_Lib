@@ -1,7 +1,7 @@
 package com.reggarf.mods.better_lib.util.common;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public abstract class BaseRow {
 
@@ -19,7 +19,7 @@ public abstract class BaseRow {
 
     /** Draw row contents */
     public abstract void drawContents(
-            GuiGraphics gfx, int x, int y, int w, int h, int mx, int my
+            GuiGraphicsExtractor gfx, int x, int y, int w, int h, int mx, int my
     );
 
     /** Mouse click */
@@ -45,7 +45,7 @@ public abstract class BaseRow {
 
     /* ==================================================== */
 
-    public void render(GuiGraphics gfx, int x, int y, int w, int h, int mx, int my) {
+    public void render(GuiGraphicsExtractor gfx, int x, int y, int w, int h, int mx, int my) {
 
         lx = x;
         ly = y;
@@ -57,15 +57,18 @@ public abstract class BaseRow {
         int bg1 = hover ? 0xFF444444 : 0x00000000;
         int bg2 = hover ? 0xFF303030 : 0xFF1A1A1A;
 
+        // Background gradient
         gfx.fillGradient(x + 4, y + 4, x + w - 4, y + h - 7, bg1, bg2);
 
-        if (hover)
+        // Top highlight line
+        if (hover) {
             gfx.fill(x + 4, y + 4, x + w - 4, y + 5, 0xFFFFAA00);
+        }
 
         drawContents(gfx, x, y, w, h, mx, my);
     }
 
-    protected void drawText(GuiGraphics gfx, String txt, int x, int y, int color) {
-        gfx.drawString(Minecraft.getInstance().font, txt, x, y, color);
+    protected void drawText(GuiGraphicsExtractor gfx, String txt, int x, int y, int color) {
+        gfx.text(Minecraft.getInstance().font, txt, x, y, color);
     }
 }

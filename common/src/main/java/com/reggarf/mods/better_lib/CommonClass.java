@@ -11,7 +11,7 @@ public class CommonClass {
     public static DemoConfig CONFIG;
     public static void init() {
         //OnlineMessageLib.registerPlugin(new DemoOnlineMessages());
-        //DemoPlugin.register();
+       // DemoPlugin.register();
         CONFIG = BetterConfigManager.register(DemoConfig.class);
     }
 }

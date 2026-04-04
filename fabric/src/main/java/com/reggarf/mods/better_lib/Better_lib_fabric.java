@@ -8,7 +8,7 @@ public class Better_lib_fabric implements ModInitializer {
     
     @Override
     public void onInitialize() {
-        Better_lib.LOG.info("Hello Fabric world!");
+        Constants.LOG.info("Hello Fabric world!");
         CommonClass.init();
         JoinMessageFabric.register();
         OnlineMessageFabric.register();

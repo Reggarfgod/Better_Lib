@@ -1,14 +1,13 @@
 package com.reggarf.mods.better_lib.config.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.reggarf.mods.better_lib.config.annotation.Config;
 import com.reggarf.mods.better_lib.config.core.BetterConfigManager;
 import com.reggarf.mods.better_lib.config.helper.BetterEntryBuilder;
-
 import com.reggarf.mods.better_lib.config.helper.ConfigPermissionHelper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.*;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
@@ -17,7 +16,6 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
-
 import net.minecraft.util.Mth;
 
 import java.lang.reflect.Field;
@@ -58,12 +56,10 @@ public class BetterConfigScreen extends Screen {
     @Override
     protected void init() {
 
-        /* ================= ADDED ================= */
         this.clearWidgets();
 
         this.canEditServerConfig =
                 ConfigPermissionHelper.canClientEditServerConfig(mc);
-        /* ======================================== */
 
         cachedTextValues.clear();
         for (WidgetData wd : widgetData) {
@@ -193,11 +189,9 @@ public class BetterConfigScreen extends Screen {
 
             if (widget != null) {
 
-                /* ================= ADDED ================= */
                 if (!canEditServerConfig) {
                     widget.active = false;
                 }
-                /* ======================================== */
 
                 scrollArea.addEntry(widget, 28);
 
@@ -214,9 +208,7 @@ public class BetterConfigScreen extends Screen {
                 .size(100, 20)
                 .build();
 
-        /* ================= ADDED ================= */
         saveButton.active = canEditServerConfig;
-        /* ======================================== */
 
         addRenderableWidget(saveButton);
 
@@ -326,36 +318,48 @@ public class BetterConfigScreen extends Screen {
 
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-        int centerX = this.width / 2;
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
 
-//        if (background != null) {
-//            RenderCompat.enableBlendSafe();
-//            RenderCompat.setShaderTextureSafe(background);
-//            RenderCompat.blitSafe(graphics, background, 0, 0, this.width, this.height, this.width, this.height);
-//        } else {
-//            graphics.fillGradient(0, 0, width, height, 0xFF0C0C0C, 0xFF202020);
-//        }
+        int centerX = graphics.guiWidth() / 2;
+        int height = graphics.guiHeight();
 
         int boxWidth = 260;
         int boxHeight = height - 160;
         int boxY = 80;
         int padding = 10;
 
+        /* ================= PANELS ================= */
 
-        graphics.fill(centerX - (boxWidth / 2) - padding, boxY - padding, centerX + (boxWidth / 2) + padding, boxY + boxHeight + padding, 0xAA000000);
-        graphics.fill(centerX - (boxWidth / 2) - padding, 35, centerX + (boxWidth / 2) + padding, 65, 0xAA000000);
-        graphics.fill(centerX - (boxWidth / 2) - padding, height - 60, centerX + (boxWidth / 2) + padding, height - 20, 0xAA000000);
+        graphics.fill(centerX - (boxWidth / 2) - padding, boxY - padding,
+                centerX + (boxWidth / 2) + padding, boxY + boxHeight + padding,
+                0xAA000000);
 
-        super.render(graphics, mouseX, mouseY, delta);
+        graphics.fill(centerX - (boxWidth / 2) - padding, 35,
+                centerX + (boxWidth / 2) + padding, 65,
+                0xAA000000);
+
+        graphics.fill(centerX - (boxWidth / 2) - padding, height - 60,
+                centerX + (boxWidth / 2) + padding, height - 20,
+                0xAA000000);
+
+        /* ================= WIDGETS ================= */
+
+        for (GuiEventListener child : this.children()) {
+            if (child instanceof AbstractWidget widget) {
+                widget.extractRenderState(graphics, mouseX, mouseY, delta);
+            }
+        }
+
+        /* ================= TITLE ================= */
 
         String modid = (configName != null && !configName.isEmpty()) ? configName : "better_lib";
         String titleKey = "config." + modid + ".title";
+
         Component title = Language.getInstance().has(titleKey)
                 ? Component.translatable(titleKey)
                 : Component.literal(capitalize(modid) + " Config");
 
-        graphics.drawCenteredString(this.font, title, centerX, 45, 0xFFFFFFFF);
+        graphics.centeredText(this.font, title, centerX, 45, 0xFFFFFFFF);
     }
 
     private Component getLangOrFallback(String key) {
@@ -407,10 +411,8 @@ public class BetterConfigScreen extends Screen {
             entries.add(new Entry(widget, heightStep));
         }
 
-        /* ================= RENDER ================= */
-
         @Override
-        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             int startY = getY() - scrollOffset;
             int visibleBottom = getY() + getHeight();
 
@@ -421,14 +423,16 @@ public class BetterConfigScreen extends Screen {
                 if (widgetY + entry.height() > getY() && widgetY < visibleBottom) {
                     widget.setX(getX() + 10);
                     widget.setY(widgetY);
-                    widget.render(graphics, mouseX, mouseY, partialTick);
+
+                    // NEW SYSTEM
+                    widget.extractRenderState(graphics, mouseX, mouseY, partialTick);
                 }
 
                 startY += entry.height();
             }
         }
 
-        /* ================= INPUT (FIXED) ================= */
+        /* ================= INPUT ================= */
 
         @Override
         public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
@@ -467,8 +471,9 @@ public class BetterConfigScreen extends Screen {
 
         @Override
         public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-            int contentHeight = entries.size() * entrySpacing;
-            int maxScroll = Math.max(0, contentHeight - this.height);
+            int contentHeight = entries.stream().mapToInt(Entry::height).sum();
+            int maxScroll = Math.max(0, contentHeight - this.getHeight());
+
             scrollOffset = Mth.clamp(scrollOffset - (int)(scrollY * 20), 0, maxScroll);
             return true;
         }
@@ -478,14 +483,10 @@ public class BetterConfigScreen extends Screen {
             return focusedWidget != null && focusedWidget.keyPressed(event);
         }
 
-
         @Override
         public boolean charTyped(CharacterEvent event) {
             return focusedWidget != null && focusedWidget.charTyped(event);
         }
-
-
-        /* ================= FOCUS ================= */
 
         private void setFocusedWidget(AbstractWidget widget) {
             if (focusedWidget != null)
@@ -507,6 +508,5 @@ public class BetterConfigScreen extends Screen {
 
         private record Entry(AbstractWidget widget, int height) {}
     }
-
 
 }

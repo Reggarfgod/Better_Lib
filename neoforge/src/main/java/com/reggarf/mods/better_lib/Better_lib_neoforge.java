@@ -12,17 +12,17 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 
 
-@Mod(Better_lib.MODID)
+@Mod(Constants.MODID)
 public class Better_lib_neoforge {
 
 
 
     public Better_lib_neoforge(IEventBus eventBus) {
-        Better_lib.LOG.info("Hello NeoForge world!");
+        Constants.LOG.info("Hello NeoForge world!");
         CommonClass.init();
 
     }
-    @EventBusSubscriber(modid = Better_lib.MODID, value = Dist.CLIENT)
+    @EventBusSubscriber(modid = Constants.MODID, value = Dist.CLIENT)
     public final class BetterLibClient {
 
         @SubscribeEvent

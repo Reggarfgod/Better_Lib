@@ -46,9 +46,6 @@ public class DemoConfig implements ConfigData {
     public boolean syncAcrossServers = false;
 
 
-    // =========================
-    // PERFORMANCE
-    // =========================
     @Category("Performance")
     @Description("Adjust the render distance to balance performance and visuals.")
     @BoundedDiscrete(min = 2, max = 32)

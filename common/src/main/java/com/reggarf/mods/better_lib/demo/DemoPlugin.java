@@ -1,6 +1,6 @@
 package com.reggarf.mods.better_lib.demo;
 
-import com.reggarf.mods.better_lib.Better_lib;
+import com.reggarf.mods.better_lib.Constants;
 import com.reggarf.mods.better_lib.message.api.JoinMessagePlugin;
 import com.reggarf.mods.better_lib.message.api.JoinMessagePlugins;
 import com.reggarf.mods.better_lib.message.api.JoinMessageSet;
@@ -12,7 +12,7 @@ public class DemoPlugin implements JoinMessagePlugin {
 
     @Override
     public String getModId() {
-        return Better_lib.MODID; // Your mod ID
+        return Constants.MODID; // Your mod ID
     }
 
     @Override

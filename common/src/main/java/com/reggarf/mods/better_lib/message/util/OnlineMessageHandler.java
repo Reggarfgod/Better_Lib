@@ -14,9 +14,6 @@ public final class OnlineMessageHandler {
 
     private OnlineMessageHandler() {}
 
-    // =====================================================
-    // INIT
-    // =====================================================
     public static void initializeFor(String modId, OnlineMessagePlugin plugin) {
 
         boolean enabled = plugin.isOnlineMessageEnabled();
@@ -33,9 +30,6 @@ public final class OnlineMessageHandler {
         CACHE.put(modId, fetchAndBuildMessages(plugin));
     }
 
-    // =====================================================
-    // JOIN HANDLER (COMMON)
-    // =====================================================
     public static void onPlayerJoin(ServerPlayer player) {
 
         for (var entry : CACHE.entrySet()) {
@@ -49,16 +43,13 @@ public final class OnlineMessageHandler {
             String tag = "better_lib:online_" + modId + "_" + hash;
 
             // Already seen this version
-            if (player.getTags().contains(tag)) continue;
+            if (player.entityTags().contains(tag)) continue;
 
             set.sendTo(player);
             player.addTag(tag);
         }
     }
 
-    // =====================================================
-    // FETCH
-    // =====================================================
     private static OnlineMessageSet fetchAndBuildMessages(OnlineMessagePlugin plugin) {
 
         String messageData = OnlineMessageFetcher.fetchOnlineMessage(plugin.getMessageUrl());

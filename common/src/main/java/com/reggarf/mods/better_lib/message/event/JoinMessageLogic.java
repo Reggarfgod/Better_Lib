@@ -18,7 +18,7 @@ public final class JoinMessageLogic {
             // Namespaced, persistent player tag
             String tag = "better_lib:joinmsg_" + plugin.getModId();
 
-            if (!player.getTags().contains(tag)) {
+            if (!player.entityTags().contains(tag)) {
 
                 for (JoinMessageSet set : plugin.getMessageSets()) {
                     set.sendTo(player);
