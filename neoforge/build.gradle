@@ -42,3 +42,12 @@ neoForge {
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+dependencies {
+    implementation "curse.maven:jade-324717:7545219"
+}
+repositories {
+    maven {
+        url "https://cursemaven.com"
+    }
+}

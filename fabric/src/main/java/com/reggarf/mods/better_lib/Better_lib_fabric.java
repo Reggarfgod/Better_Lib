@@ -2,16 +2,19 @@ package com.reggarf.mods.better_lib;
 
 import com.reggarf.mods.better_lib.message.JoinMessageFabric;
 import com.reggarf.mods.better_lib.message.OnlineMessageFabric;
+import com.reggarf.mods.better_lib.villagers.demo.ModOreTrader;
 import net.fabricmc.api.ModInitializer;
 
 public class Better_lib_fabric implements ModInitializer {
-    
+
     @Override
     public void onInitialize() {
         Better_lib.LOG.info("Hello Fabric world!");
         CommonClass.init();
         JoinMessageFabric.register();
         OnlineMessageFabric.register();
+
+       // ModOreTrader.register(); // Demo Villager (register)
     }
 
 }
