@@ -12,6 +12,7 @@ public class Better_lib_fabric implements ModInitializer {
         CommonClass.init();
         JoinMessageFabric.register();
         OnlineMessageFabric.register();
+
     }
 
 }

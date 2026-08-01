@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "better_lib:ore_trader_poi", "required": false },
+    { "id": "better_lib:arcane_trader_poi", "required": false },
+    { "id": "better_lib:treasure_hunter_poi", "required": false },
+    { "id": "better_lib:andesite_worker_poi", "required": false }
+  ]
+}
