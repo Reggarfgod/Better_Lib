@@ -17,7 +17,7 @@ public class CommonClass {
         CONFIG = BetterConfigManager.register(DemoConfig.class);
 
         // Code-defined professions (ore_trader, arcane_trader, etc.)
-        ModOreTrader.register(); // Demo Villager (register)
+       // ModOreTrader.register(); // Demo Villager (register)
 
         // JSON-defined professions under /villagers/*.json - isolated: a
         // missing/empty folder or a bad file logs an error instead of
