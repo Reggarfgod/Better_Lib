@@ -6,6 +6,7 @@ import com.reggarf.mods.better_lib.villagers.ProfessionEntry;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderOwner;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
@@ -16,6 +17,7 @@ import net.minecraft.world.entity.npc.VillagerTrades;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.village.VillagerTradesEvent;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
@@ -57,7 +59,7 @@ public class ForgeRegistryPlatform implements VillagerRegistryPlatform {
         DeferredRegister<VillagerProfession> registry = professionRegistries.computeIfAbsent(modid,
                 id -> DeferredRegister.create(Registries.VILLAGER_PROFESSION, id));
 
-        RegistryObject<VillagerProfession> obj = registry.register(name, () -> new VillagerProfession(name,
+        RegistryObject<VillagerProfession> obj = registry.register(name, () -> new VillagerProfession(Component.literal(name),
                 holder -> holder.value() == poi.value(),
                 holder -> holder.value() == poi.value(),
                 ImmutableSet.of(), ImmutableSet.of(), workSound));
@@ -76,7 +78,7 @@ public class ForgeRegistryPlatform implements VillagerRegistryPlatform {
             return;
         }
 
-        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+        BusGroup modBus = FMLJavaModLoadingContext.get().getModBusGroup();
 
         DeferredRegister<PoiType> poi = poiRegistries.get(modid);
         DeferredRegister<VillagerProfession> professions = professionRegistries.get(modid);
@@ -87,20 +89,24 @@ public class ForgeRegistryPlatform implements VillagerRegistryPlatform {
             professions.register(modBus);
         }
 
-        MinecraftForge.EVENT_BUS.addListener(this::onVillagerTrades);
+        VillagerTradesEvent.BUS.addListener(this::onVillagerTrades);
     }
 
     private void onVillagerTrades(VillagerTradesEvent event) {
+        ResourceKey<VillagerProfession> eventProfessionKey = event.getType();
+
         for (ProfessionEntry entry : ALL_ENTRIES) {
             if (!entry.enabled().getAsBoolean()) {
                 continue;
             }
-            if (event.getType() != entry.profession().value()) {
+
+            // Compare the ResourceKey from the event with the key from our registered profession
+            if (!entry.profession().is(eventProfessionKey)) {
                 continue;
             }
 
             entry.trades().forEach((level, listingSuppliers) -> {
-                List<VillagerTrades.ItemListing> levelTrades = event.getTrades().get(level);
+                List<VillagerTrades.ItemListing> levelTrades = event.getTrades().computeIfAbsent(level, l -> new ArrayList<>());
                 for (Supplier<VillagerTrades.ItemListing> supplier : listingSuppliers) {
                     levelTrades.add(supplier.get());
                 }

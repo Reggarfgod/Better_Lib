@@ -7,6 +7,8 @@ import net.fabricmc.fabric.api.object.builder.v1.world.poi.PointOfInterestHelper
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.ai.village.poi.PoiType;
@@ -39,7 +41,7 @@ public class FabricRegistryPlatform implements VillagerRegistryPlatform {
     public Holder<VillagerProfession> registerProfession(String modid, String name,
                                                          Holder<PoiType> poi, SoundEvent workSound) {
 
-        VillagerProfession profession = new VillagerProfession(name,
+        VillagerProfession profession = new VillagerProfession(Component.literal(name),
                 holder -> holder.value() == poi.value(),
                 holder -> holder.value() == poi.value(),
                 ImmutableSet.of(), ImmutableSet.of(), workSound);
@@ -52,8 +54,13 @@ public class FabricRegistryPlatform implements VillagerRegistryPlatform {
 
     @Override
     public void registerTradeSource(String modid, ProfessionEntry entry) {
+        ResourceKey<VillagerProfession> professionKey = entry.profession()
+                .unwrapKey()
+                .orElseThrow(() -> new IllegalStateException(
+                        "Profession holder for '" + modid + "' has no resource key"));
+
         entry.trades().forEach((level, listingSuppliers) ->
-                TradeOfferHelper.registerVillagerOffers(entry.profession().value(), level, tradesList -> {
+                TradeOfferHelper.registerVillagerOffers(professionKey, level, tradesList -> {
                     if (!entry.enabled().getAsBoolean()) {
                         return;
                     }
