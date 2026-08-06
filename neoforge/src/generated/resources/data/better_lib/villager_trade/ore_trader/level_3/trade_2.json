@@ -1,0 +1,17 @@
+{
+  "additional_wants": {
+    "count": 24.0,
+    "id": "minecraft:raw_iron"
+  },
+  "gives": {
+    "count": 4,
+    "id": "minecraft:iron_chain"
+  },
+  "max_uses": 8.0,
+  "reputation_discount": 0.05,
+  "wants": {
+    "count": 6.0,
+    "id": "minecraft:emerald"
+  },
+  "xp": 10.0
+}
