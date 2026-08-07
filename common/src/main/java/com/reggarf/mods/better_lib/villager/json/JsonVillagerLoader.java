@@ -19,19 +19,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
-import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.stream.Stream;
 
 /**
@@ -123,73 +126,26 @@ public final class JsonVillagerLoader {
             normalized += "/";
         }
 
-        List<String> jsonFileNames = new ArrayList<>();
-        FileSystem openedFs = null;
+        List<String> jsonFileNames;
         try {
-            Path dirPath = null;
-
-            URL folderUrl = modClass.getClassLoader().getResource(normalized);
-            if (folderUrl != null) {
-                URI uri = folderUrl.toURI();
-                try {
-                    dirPath = Paths.get(uri);
-                } catch (FileSystemNotFoundException notMounted) {
-                    openedFs = FileSystems.newFileSystem(uri, Collections.emptyMap());
-                    dirPath = openedFs.provider().getPath(uri);
-                }
-            }
-
-            if (dirPath == null) {
-                URI codeUri = modClass.getProtectionDomain().getCodeSource().getLocation().toURI();
-                Path codePath = Paths.get(codeUri);
-                if (Files.isDirectory(codePath)) {
-                    String codeStr = codePath.toString();
-                    String marker = "classes" + File.separator + "java" + File.separator;
-                    int idx = codeStr.indexOf(marker);
-                    if (idx >= 0) {
-                        String sourceSet = codeStr.substring(idx + marker.length());
-                        Path resourcesRoot = Paths.get(
-                                codeStr.substring(0, idx) + "resources" + File.separator + sourceSet);
-                        Path candidate = resourcesRoot.resolve(normalized);
-                        if (Files.isDirectory(candidate)) {
-                            dirPath = candidate;
-                        }
-                    }
-                }
-            }
-
-            if (dirPath == null) {
-                throw new IllegalArgumentException(
-                        "JsonVillagerLoader: folder '" + folderPath + "' not found on classpath");
-            }
-
-            try (Stream<Path> children = Files.list(dirPath)) {
-                children.forEach(child -> {
-                    String fileName = child.getFileName().toString();
-                    if (fileName.endsWith(".json")) {
-                        jsonFileNames.add(fileName);
-                    }
-                });
-            }
+            jsonFileNames = collectJsonFileNames(modClass, normalized);
         } catch (Exception e) {
             throw new RuntimeException("JsonVillagerLoader: failed to scan folder '" + folderPath + "'", e);
-        } finally {
-            if (openedFs != null) {
-                try {
-                    openedFs.close();
-                } catch (IOException ignored) {
-                }
-            }
         }
 
         for (String fileName : jsonFileNames) {
-            try (InputStream stream = modClass.getResourceAsStream("/" + normalized + fileName);
-                 InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
-                JsonObject json = GSON.fromJson(reader, JsonObject.class);
-                if (json == null || json.entrySet().isEmpty()) {
-                    continue;
+            try (InputStream stream = modClass.getClassLoader().getResourceAsStream(normalized + fileName)) {
+                if (stream == null) {
+                    throw new IllegalArgumentException(
+                            "JsonVillagerLoader: resource '" + normalized + fileName + "' not found on classpath");
                 }
-                load(lib, json);
+                try (InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+                    JsonObject json = GSON.fromJson(reader, JsonObject.class);
+                    if (json == null || json.entrySet().isEmpty()) {
+                        continue;
+                    }
+                    load(lib, json);
+                }
             } catch (IOException e) {
                 throw new RuntimeException(
                         "JsonVillagerLoader: failed to read '" + normalized + fileName + "'", e);
@@ -197,6 +153,150 @@ public final class JsonVillagerLoader {
         }
 
         return lib;
+    }
+
+    private static List<String> collectJsonFileNames(Class<?> modClass, String normalized)
+            throws IOException, URISyntaxException {
+        List<String> jsonFileNames = new ArrayList<>();
+
+        URL folderUrl = modClass.getClassLoader().getResource(normalized);
+        if (folderUrl != null) {
+            if ("file".equals(folderUrl.getProtocol())) {
+                try (Stream<Path> children = Files.list(Paths.get(folderUrl.toURI()))) {
+                    children.forEach(child -> addJsonFileName(jsonFileNames, child.getFileName().toString()));
+                }
+                return jsonFileNames;
+            }
+            if ("jar".equals(folderUrl.getProtocol())) {
+                collectJsonFileNamesFromJarUrl(folderUrl, normalized, jsonFileNames);
+                return jsonFileNames;
+            }
+        }
+
+        Path devDir = locateDevResourcesDir(modClass, normalized);
+        if (devDir != null) {
+            try (Stream<Path> children = Files.list(devDir)) {
+                children.forEach(child -> addJsonFileName(jsonFileNames, child.getFileName().toString()));
+            }
+            return jsonFileNames;
+        }
+
+        collectJsonFileNamesFromCodeSourceJar(modClass, normalized, jsonFileNames);
+        if (!jsonFileNames.isEmpty()) {
+            return jsonFileNames;
+        }
+
+        throw new IllegalArgumentException(
+                "JsonVillagerLoader: folder '/" + normalized + "' not found on classpath");
+    }
+
+    private static void collectJsonFileNamesFromJarUrl(URL folderUrl, String normalized, List<String> jsonFileNames)
+            throws IOException, URISyntaxException {
+        URI uri = folderUrl.toURI();
+        String uriString = uri.toString();
+        int separator = uriString.indexOf("!/");
+        if (separator < 0) {
+            throw new IOException("Invalid jar resource URL: " + uriString);
+        }
+
+        URI jarUri = URI.create(uriString.substring(0, separator));
+        String entryPath = uriString.substring(separator + 2);
+
+        try (FileSystem fileSystem = FileSystems.newFileSystem(jarUri, Collections.emptyMap())) {
+            Path directory = fileSystem.getPath(entryPath);
+            if (!Files.isDirectory(directory)) {
+                throw new IOException("Jar resource is not a directory: " + entryPath);
+            }
+            try (Stream<Path> children = Files.list(directory)) {
+                children.forEach(child -> addJsonFileName(jsonFileNames, child.getFileName().toString()));
+            }
+        }
+    }
+
+    private static void collectJsonFileNamesFromCodeSourceJar(
+            Class<?> modClass,
+            String normalized,
+            List<String> jsonFileNames
+    ) throws IOException, URISyntaxException {
+        if (modClass.getProtectionDomain() == null
+                || modClass.getProtectionDomain().getCodeSource() == null
+                || modClass.getProtectionDomain().getCodeSource().getLocation() == null) {
+            return;
+        }
+
+        URI codeUri = modClass.getProtectionDomain().getCodeSource().getLocation().toURI();
+        Path jarPath = resolveJarPath(codeUri);
+        if (jarPath == null || !Files.isRegularFile(jarPath)) {
+            return;
+        }
+
+        try (JarFile jarFile = new JarFile(jarPath.toFile())) {
+            Enumeration<JarEntry> entries = jarFile.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String entryName = entry.getName();
+                if (!entryName.startsWith(normalized) || !entryName.endsWith(".json")) {
+                    continue;
+                }
+                String relative = entryName.substring(normalized.length());
+                if (!relative.contains("/")) {
+                    addJsonFileName(jsonFileNames, relative);
+                }
+            }
+        }
+    }
+
+    private static Path resolveJarPath(URI codeUri) {
+        if ("jar".equals(codeUri.getScheme())) {
+            String schemeSpecific = codeUri.getSchemeSpecificPart();
+            int separator = schemeSpecific.indexOf('!');
+            String jarLocation = separator >= 0 ? schemeSpecific.substring(0, separator) : schemeSpecific;
+            return Paths.get(URI.create(jarLocation));
+        }
+        if (codeUri.getPath() != null && codeUri.getPath().endsWith(".jar")) {
+            return Paths.get(codeUri);
+        }
+        return null;
+    }
+
+    private static Path locateDevResourcesDir(Class<?> modClass, String normalized) {
+        if (modClass.getProtectionDomain() == null
+                || modClass.getProtectionDomain().getCodeSource() == null
+                || modClass.getProtectionDomain().getCodeSource().getLocation() == null) {
+            return null;
+        }
+
+        try {
+            Path codePath = Paths.get(modClass.getProtectionDomain().getCodeSource().getLocation().toURI());
+            if (!Files.isDirectory(codePath)) {
+                return null;
+            }
+
+            String codeStr = codePath.toString();
+            String marker = "classes" + File.separator + "java" + File.separator;
+            int idx = codeStr.indexOf(marker);
+            if (idx < 0) {
+                return null;
+            }
+
+            String sourceSet = codeStr.substring(idx + marker.length());
+            Path resourcesRoot = Paths.get(
+                    codeStr.substring(0, idx) + "resources" + File.separator + sourceSet
+            );
+            Path candidate = resourcesRoot.resolve(normalized);
+            return Files.isDirectory(candidate) ? candidate : null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private static void addJsonFileName(List<String> jsonFileNames, String fileName) {
+        if (fileName.endsWith(".json")) {
+            jsonFileNames.add(fileName);
+        }
     }
 
     /** Parses and registers one profession from an already-parsed JsonObject. */
