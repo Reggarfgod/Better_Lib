@@ -18,6 +18,9 @@ public final class VillagerLibRegistry {
     }
 
     static void registerLib(SimpleVillagerLib lib) {
+        if (LIBS.contains(lib)) {
+            return;
+        }
         LIBS.add(lib);
         Constants.LOG.info("[VillagerLib] registerLib called, LIBS now has {} entries", LIBS.size());
     }

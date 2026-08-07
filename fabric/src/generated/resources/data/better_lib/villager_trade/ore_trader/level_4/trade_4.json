@@ -1,0 +1,11 @@
+{
+  "gives": {
+    "id": "minecraft:anvil"
+  },
+  "reputation_discount": 0.05,
+  "wants": {
+    "count": 7.0,
+    "id": "minecraft:emerald"
+  },
+  "xp": 15.0
+}

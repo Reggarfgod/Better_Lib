@@ -1,0 +1,6 @@
+{
+  "allow_duplicates": true,
+  "amount": 2,
+  "random_sequence": "better_lib:trade_set/ore_trader/level_2",
+  "trades": "#better_lib:ore_trader/level_2"
+}

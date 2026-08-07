@@ -14,6 +14,15 @@ dependencies {
     implementation "curse.maven:modmenu-308702:7813924"
 }
 
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+fabricApi {
+    configureDataGeneration {
+        modId = mod_id
+        outputDirectory = file('src/generated/resources')
+    }
+}
+
 loom {
     def aw = project(':common').file("src/main/resources/${mod_id}.accesswidener")
     if (aw.exists()) {
