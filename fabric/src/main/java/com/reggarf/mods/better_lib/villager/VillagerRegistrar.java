@@ -1,13 +1,22 @@
 package com.reggarf.mods.better_lib.villager;
 
+import com.google.common.collect.ImmutableSet;
 import com.reggarf.mods.better_lib.Constants;
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.ai.village.poi.PoiType;
+import net.minecraft.world.entity.ai.village.poi.PoiTypes;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+
+import java.util.Optional;
 
 /**
  * POI types and villager professions are code registries in 26.1+. On Fabric they
- * are registered directly during mod initialization, with POIs registered before
- * professions so {@link VillagerLibRuntime#createProfession} can resolve holders.
+ * are registered during mod initialization. POIs must be registered with
+ * {@link PoiTypes#register} so workstation block states are indexed for job-site
+ * detection; plain {@link Registry#register} is not enough.
  */
 public final class VillagerRegistrar {
 
@@ -21,19 +30,33 @@ public final class VillagerRegistrar {
 
     private static void registerAllPois() {
         for (ProfessionDefinition def : VillagerLibRegistry.getAllDefinitions()) {
-            VillagerLibRuntime.createPoiType(def).ifPresent(poiType -> {
-                var id = VillagerLibRuntime.professionId(def);
-                Registry.register(
-                        BuiltInRegistries.POINT_OF_INTEREST_TYPE,
-                        VillagerLibTradeTags.poiKey(def),
-                        poiType
+            Block workstationBlock = def.workstation().get();
+            Optional<Holder<PoiType>> existing = PoiTypes.forState(workstationBlock.defaultBlockState());
+            if (existing.isPresent()) {
+                Constants.LOG.error(
+                        "[VillagerLib] Skipping profession '{}' — workstation block {} is already a POI for {}",
+                        def.path(), workstationBlock, existing.get()
                 );
-                VillagerLibRuntime.storePoiHolder(
-                        def,
-                        BuiltInRegistries.POINT_OF_INTEREST_TYPE.wrapAsHolder(poiType)
-                );
-                Constants.LOG.info("[VillagerLib] Registered POI {} for profession '{}'", id, def.path());
-            });
+                continue;
+            }
+
+            ImmutableSet<BlockState> matchingStates =
+                    ImmutableSet.copyOf(workstationBlock.getStateDefinition().getPossibleStates());
+            PoiType poiType = PoiTypes.register(
+                    BuiltInRegistries.POINT_OF_INTEREST_TYPE,
+                    VillagerLibTradeTags.poiKey(def),
+                    matchingStates,
+                    def.maxVillagers(),
+                    def.searchRange()
+            );
+            VillagerLibRuntime.storePoiHolder(
+                    def,
+                    BuiltInRegistries.POINT_OF_INTEREST_TYPE.wrapAsHolder(poiType)
+            );
+            Constants.LOG.info(
+                    "[VillagerLib] Registered POI {} for profession '{}'",
+                    VillagerLibRuntime.professionId(def), def.path()
+            );
         }
     }
 

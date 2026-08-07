@@ -1,5 +1,6 @@
 {
   "values": [
-    "better_lib:ore_trader"
+    "better_lib:ore_trader",
+    "better_lib:andesite_worker"
   ]
 }

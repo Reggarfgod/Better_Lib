@@ -28,6 +28,6 @@ public class CommonClass {
         JsonVillagerLoader.loadAll(VILLAGERS, CommonClass.class, "/data/better_lib/villagers");
         VILLAGERS.register();
         //Code-defined professions (ore_trader, etc.)
-        ModOreTrader.register();
+        //ModOreTrader.register();
     }
 }
