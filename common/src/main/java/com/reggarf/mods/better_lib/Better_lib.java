@@ -1,6 +1,5 @@
 package com.reggarf.mods.better_lib;
 
-import com.reggarf.mods.better_lib.demo.DemoConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

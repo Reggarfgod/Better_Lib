@@ -17,6 +17,8 @@ neoForge {
     runs {
         configureEach {
             systemProperty('neoforge.enabledGameTestNamespaces', mod_id)
+            systemProperty('neoforge.earlydisplay', 'false')
+            systemProperty('fml.earlyprogresswindow', 'false')
             ideName = "NeoForge ${it.name.capitalize()} (${project.path})" // Unify the run config names with fabric
         }
         client {

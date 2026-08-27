@@ -1,23 +1,20 @@
 package com.reggarf.mods.better_lib;
 
-
-import com.reggarf.mods.better_lib.config.core.BetterConfigManager;
-import com.reggarf.mods.better_lib.demo.DemoConfig;
 import com.reggarf.mods.better_lib.villagers.SimpleVillagerLib;
 import com.reggarf.mods.better_lib.villagers.demo.ModOreTrader;
-import com.reggarf.mods.better_lib.villagers.json.JsonVillagerLoader;
 
 public class CommonClass {
-    public static DemoConfig CONFIG;
     public static final SimpleVillagerLib VILLAGERS = new SimpleVillagerLib(Better_lib.MODID);
 
     public static void init() {
+        // Register Create-style configuration specifications
+
+
         //OnlineMessageLib.registerPlugin(new DemoOnlineMessages());
         //DemoPlugin.register();
-        CONFIG = BetterConfigManager.register(DemoConfig.class);
 
         // Code-defined professions (ore_trader, arcane_trader, etc.)
-       // ModOreTrader.register(); // Demo Villager (register)
+        //ModOreTrader.register(); // Demo Villager (register)
 
         // JSON-defined professions under /villagers/*.json - isolated: a
         // missing/empty folder or a bad file logs an error instead of
