@@ -1,36 +1,36 @@
-//{
-//  "name": "andesite_worker",
-//  "workstation": "minecraft:smooth_stone",
-//  "max_villagers": 1,
-//  "search_range": 1,
-//  "work_sound": "minecraft:entity.villager.work_armorer",
-//  "enabled": true,
-//  "trades": {
-//    "1": [
-//      {
-//        "cost": { "item": "minecraft:emerald", "count": 9 },
-//        "cost2": { "item": "minecraft:cobblestone", "count": 6 },
-//        "result": { "item": "minecraft:iron_ingot", "count": 2 },
-//        "max_trades": 5,
-//        "xp": 3,
-//        "price_multiplier": 0.07
-//      },
-//      {
-//        "cost": { "item": "minecraft:cobblestone", "count": 16 },
-//        "result": { "item": "minecraft:emerald", "count": 1 },
-//        "max_trades": 12,
-//        "xp": 2,
-//        "price_multiplier": 0.05
-//      }
-//    ],
-//    "2": [
-//      {
-//        "cost": { "item": "minecraft:emerald", "count": 12 },
-//        "result": { "item": "minecraft:diamond", "count": 1 },
-//        "max_trades": 8,
-//        "xp": 5,
-//        "price_multiplier": 0.05
-//      }
-//    ]
-//  }
-//}
+{
+  "name": "andesite_worker",
+  "workstation": "minecraft:smooth_stone",
+  "max_villagers": 1,
+  "search_range": 1,
+  "work_sound": "minecraft:entity.villager.work_armorer",
+  "enabled": true,
+  "trades": {
+    "1": [
+      {
+        "cost": { "item": "minecraft:emerald", "count": 9 },
+        "cost2": { "item": "minecraft:cobblestone", "count": 6 },
+        "result": { "item": "minecraft:iron_ingot", "count": 2 },
+        "max_trades": 5,
+        "xp": 3,
+        "price_multiplier": 0.07
+      },
+      {
+        "cost": { "item": "minecraft:cobblestone", "count": 16 },
+        "result": { "item": "minecraft:emerald", "count": 1 },
+        "max_trades": 12,
+        "xp": 2,
+        "price_multiplier": 0.05
+      }
+    ],
+    "2": [
+      {
+        "cost": { "item": "minecraft:emerald", "count": 12 },
+        "result": { "item": "minecraft:diamond", "count": 1 },
+        "max_trades": 8,
+        "xp": 5,
+        "price_multiplier": 0.05
+      }
+    ]
+  }
+}
