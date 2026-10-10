@@ -1,0 +1,97 @@
+name: Bug report
+description: File a bug report for Better Lib
+labels: [bug, triage]
+assignees:
+  - Reggarf
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!WARNING]  
+        > This form is **only for bug reports**!
+        > Please don't use this for feature requests or questions.
+        > Issues that do not follow this template or lack logs may be closed without investigation.
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug description
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: dropdown
+    id: mc_version
+    attributes:
+      label: Minecraft version
+      description: Select the Minecraft version you are running.
+      options:
+        - "1.21.1"
+        - "1.21"
+        - "1.20.1"
+        - Other (specify in description)
+    validations:
+      required: true
+  - type: dropdown
+    id: mod_loader
+    attributes:
+      label: Mod loader
+      description: Select which mod loader you are using.
+      options:
+        - NeoForge
+        - Fabric
+        - Forge
+        - Other (specify in description)
+    validations:
+      required: true
+  - type: input
+    id: mod_loader_version
+    attributes:
+      label: Mod loader version
+      description: Exact version of Fabric, NeoForge, or Forge.
+      placeholder: e.g. NeoForge 21.1.80 / Fabric Loader 0.16.9 / Forge 52.0.28
+    validations:
+      required: true
+  - type: input
+    id: mod_version
+    attributes:
+      label: Better Lib version
+      description: The version of Better Lib installed.
+      placeholder: e.g. 1.0.111
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Steps to reproduce the issue.
+        Please ensure the bug is consistently reproducible.
+      placeholder: |
+        1. Join a singleplayer world / server.
+        2. Open the welcome popup or trigger the config screen.
+        3. Observe the issue...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: A clear description of what you expected to happen.
+    validations:
+      required: false
+  - type: input
+    id: logs
+    attributes:
+      label: Log / Crash report URL
+      description: |
+        Please paste the link to your `latest.log` or `crash-report.txt`.
+        Upload using [mclo.gs](https://mclo.gs/) or [gist.github.com](https://gist.github.com/). Do not paste raw logs directly here.
+      placeholder: https://mclo.gs/example or https://gist.github.com/example/example
+    validations:
+      required: false
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / Videos
+      description: Drag and drop screenshots or paste video links demonstrating the setup and bug.
+    validations:
+      required: false
