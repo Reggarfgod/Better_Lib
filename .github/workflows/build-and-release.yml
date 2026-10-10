@@ -52,14 +52,12 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Set up Java 21 & 17
+      - name: Set up Java 21
         if: steps.check_tag.outputs.exists == 'false'
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: |
-            21
-            17
+          java-version: '21'
 
       - name: Setup Gradle
         if: steps.check_tag.outputs.exists == 'false'
