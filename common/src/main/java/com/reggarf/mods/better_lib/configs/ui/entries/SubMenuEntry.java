@@ -1,7 +1,7 @@
 package com.reggarf.mods.better_lib.configs.ui.entries;
 
 import com.reggarf.mods.better_lib.configs.ConfigBase;
-import com.reggarf.mods.better_lib.configs.gui.AllIcons;
+import com.reggarf.mods.better_lib.configs.gui.BetterIcons;
 import com.reggarf.mods.better_lib.configs.gui.ScreenOpener;
 import com.reggarf.mods.better_lib.configs.gui.element.DelegatedStencilElement;
 import com.reggarf.mods.better_lib.configs.gui.widget.BoxWidget;
@@ -27,7 +27,7 @@ public class SubMenuEntry extends ConfigScreenList.LabeledEntry {
 		this.unit = count + (count == 1 ? " option" : " options");
 
 		button = new BoxWidget(0, 0, 36, 18)
-				.showingElement(AllIcons.I_CONFIG_OPEN.asStencil().at(10, 1))
+				.showingElement(BetterIcons.I_CONFIG_OPEN.asStencil().at(10, 1))
 				.withCallback(this::openCategory);
 		button.modifyElement(e -> ((DelegatedStencilElement) e).withElementRenderer(BoxWidget.gradientFactory.apply(button)));
 		button.getToolTip().add(Component.literal("Open " + label));

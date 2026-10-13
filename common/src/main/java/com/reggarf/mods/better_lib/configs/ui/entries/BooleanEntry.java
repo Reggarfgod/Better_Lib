@@ -1,7 +1,7 @@
 package com.reggarf.mods.better_lib.configs.ui.entries;
 
 import com.reggarf.mods.better_lib.configs.ConfigBase;
-import com.reggarf.mods.better_lib.configs.gui.AllIcons;
+import com.reggarf.mods.better_lib.configs.gui.BetterIcons;
 import com.reggarf.mods.better_lib.configs.gui.Theme;
 import com.reggarf.mods.better_lib.configs.gui.UIRenderHelper;
 import com.reggarf.mods.better_lib.configs.gui.element.RenderElement;
@@ -17,11 +17,11 @@ public class BooleanEntry extends ValueEntry<Boolean> {
 	public BooleanEntry(String label, ConfigBase.ConfigBool value, String path) {
 		super(label, value, path);
 
-		enabled = AllIcons.I_CONFIRM.asStencil()
+		enabled = BetterIcons.I_CONFIRM.asStencil()
 			.withElementRenderer((ms, width, height, alpha) -> UIRenderHelper.angledGradient(ms, 0, 0, height / 2, height, width, Theme.p(Theme.Key.BUTTON_SUCCESS)))
 			.at(10, 0);
 
-		disabled = AllIcons.I_DISABLE.asStencil()
+		disabled = BetterIcons.I_DISABLE.asStencil()
 			.withElementRenderer((ms, width, height, alpha) -> UIRenderHelper.angledGradient(ms, 0, 0, height / 2, height, width, Theme.p(Theme.Key.BUTTON_FAIL)))
 			.at(10, 0);
 

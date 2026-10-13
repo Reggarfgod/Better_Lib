@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import net.minecraft.client.gui.GuiGraphics;
 
-public class ElementWidget extends AbstractSimiWidget {
+public class ElementWidget extends BetterWidgetBase {
 
 	protected RenderElement element = RenderElement.EMPTY;
 

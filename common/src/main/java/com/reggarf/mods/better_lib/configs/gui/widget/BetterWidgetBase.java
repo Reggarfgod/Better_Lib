@@ -9,7 +9,7 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
-public abstract class AbstractSimiWidget extends AbstractWidget {
+public abstract class BetterWidgetBase extends AbstractWidget {
 
 	public static final int HEADER_RGB = 0x5391E1;
 	public static final int HINT_RGB = 0x96B7E0;
@@ -22,28 +22,28 @@ public abstract class AbstractSimiWidget extends AbstractWidget {
 	public int lockedTooltipX = -1;
 	public int lockedTooltipY = -1;
 
-	protected AbstractSimiWidget(int x, int y) {
+	protected BetterWidgetBase(int x, int y) {
 		this(x, y, 16, 16);
 	}
 
-	protected AbstractSimiWidget(int x, int y, int width, int height) {
+	protected BetterWidgetBase(int x, int y, int width, int height) {
 		this(x, y, width, height, CommonComponents.EMPTY);
 	}
 
-	protected AbstractSimiWidget(int x, int y, int width, int height, Component message) {
+	protected BetterWidgetBase(int x, int y, int width, int height, Component message) {
 		super(x, y, width, height, message);
 	}
 
-	public <T extends AbstractSimiWidget> T withCallback(BiConsumer<Integer, Integer> cb) {
+	public <T extends BetterWidgetBase> T withCallback(BiConsumer<Integer, Integer> cb) {
 		this.onClick = cb;
 		return (T) this;
 	}
 
-	public <T extends AbstractSimiWidget> T withCallback(Runnable cb) {
+	public <T extends BetterWidgetBase> T withCallback(Runnable cb) {
 		return withCallback((_$, _$$) -> cb.run());
 	}
 
-	public <T extends AbstractSimiWidget> T atZLevel(float z) {
+	public <T extends BetterWidgetBase> T atZLevel(float z) {
 		this.z = z;
 		return (T) this;
 	}

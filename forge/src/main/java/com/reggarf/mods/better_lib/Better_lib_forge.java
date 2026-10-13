@@ -1,7 +1,6 @@
 package com.reggarf.mods.better_lib;
 
-import com.reggarf.mods.better_lib.config.core.BetterConfigScreenFactory;
-import com.reggarf.mods.better_lib.demo.DemoConfig;
+import com.reggarf.mods.better_lib.configs.demo.BetterLibConfigScreen;
 import com.reggarf.mods.better_lib.gui.screen.BetterConfigScreenHandler;
 import com.reggarf.mods.better_lib.popup.manager.WelcomePopupManager;
 import com.reggarf.mods.better_lib.popup.network.WelcomePopupPayload;
@@ -46,9 +45,7 @@ public class Better_lib_forge {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
             event.enqueueWork(() -> {
-                BetterConfigScreenHandler.register("better_lib", parent ->
-                        BetterConfigScreenFactory.from(DemoConfig.class, CommonClass.CONFIG, parent)
-                );
+                BetterConfigScreenHandler.register("better_lib", BetterLibConfigScreen::ModScreen);
             });
         }
     }

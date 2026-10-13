@@ -1,7 +1,7 @@
 package com.reggarf.mods.better_lib.configs.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.reggarf.mods.better_lib.configs.gui.widget.AbstractSimiWidget;
+import com.reggarf.mods.better_lib.configs.gui.widget.BetterWidgetBase;
 import java.util.Collection;
 import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
@@ -14,18 +14,28 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
-public abstract class AbstractSimiScreen extends Screen {
+public abstract class BetterScreenBase extends Screen {
 
 	protected int windowWidth, windowHeight;
 	protected int windowXOffset, windowYOffset;
 	protected int guiLeft, guiTop;
 
-	protected AbstractSimiScreen(Component title) {
+	protected BetterScreenBase(Component title) {
 		super(title);
 	}
 
-	protected AbstractSimiScreen() {
+	protected BetterScreenBase() {
 		this(CommonComponents.EMPTY);
+	}
+
+	@Override
+	protected void renderBlurredBackground(float partialTick) {
+		// Suppress Minecraft full-screen blur shader pass to ensure all elements stay crisp
+	}
+
+	@Override
+	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+		this.renderTransparentBackground(graphics);
 	}
 
 	protected void setWindowSize(int width, int height) {
@@ -49,7 +59,7 @@ public abstract class AbstractSimiScreen extends Screen {
 	@Override
 	public void tick() {
 		for (GuiEventListener listener : children()) {
-			if (listener instanceof AbstractSimiWidget tickable) {
+			if (listener instanceof BetterWidgetBase tickable) {
 				tickable.tick();
 			}
 		}
@@ -113,13 +123,13 @@ public abstract class AbstractSimiScreen extends Screen {
 
 	protected void renderWindowForeground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		for (GuiEventListener widget : children()) {
-			if (widget instanceof AbstractSimiWidget simiWidget && simiWidget.isMouseOver(mouseX, mouseY)
-				&& simiWidget.visible) {
-				List<Component> tooltip = simiWidget.getToolTip();
+			if (widget instanceof BetterWidgetBase betterWidget && betterWidget.isMouseOver(mouseX, mouseY)
+				&& betterWidget.visible) {
+				List<Component> tooltip = betterWidget.getToolTip();
 				if (tooltip.isEmpty())
 					continue;
-				int ttx = simiWidget.lockedTooltipX == -1 ? mouseX : simiWidget.lockedTooltipX + simiWidget.getX();
-				int tty = simiWidget.lockedTooltipY == -1 ? mouseY : simiWidget.lockedTooltipY + simiWidget.getY();
+				int ttx = betterWidget.lockedTooltipX == -1 ? mouseX : betterWidget.lockedTooltipX + betterWidget.getX();
+				int tty = betterWidget.lockedTooltipY == -1 ? mouseY : betterWidget.lockedTooltipY + betterWidget.getY();
 				graphics.renderComponentTooltip(font, tooltip, ttx, tty);
 			}
 		}

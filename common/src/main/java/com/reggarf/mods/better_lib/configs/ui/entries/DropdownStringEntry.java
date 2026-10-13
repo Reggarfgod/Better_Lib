@@ -1,7 +1,7 @@
 package com.reggarf.mods.better_lib.configs.ui.entries;
 
 import com.reggarf.mods.better_lib.configs.ConfigBase;
-import com.reggarf.mods.better_lib.configs.gui.AllIcons;
+import com.reggarf.mods.better_lib.configs.gui.BetterIcons;
 import com.reggarf.mods.better_lib.configs.gui.Theme;
 import com.reggarf.mods.better_lib.configs.gui.UIRenderHelper;
 import com.reggarf.mods.better_lib.configs.gui.element.BoxElement;
@@ -30,14 +30,14 @@ public class DropdownStringEntry extends ValueEntry<String> {
 		valueText.withElementRenderer((ms, width, height, alpha) -> UIRenderHelper.angledGradient(ms, 0, 0, height / 2,
 				height, width, Theme.p(Theme.Key.TEXT)));
 
-		DelegatedStencilElement l = AllIcons.I_CONFIG_PREV.asStencil();
+		DelegatedStencilElement l = BetterIcons.I_CONFIG_PREV.asStencil();
 		cycleLeft = new BoxWidget(0, 0, cycleWidth + 8, 16)
 				.withCustomBackground(Theme.c(Theme.Key.PONDER_BACKGROUND_FLAT))
 				.showingElement(l)
 				.withCallback(() -> cycleValue(-1));
 		l.withElementRenderer(BoxWidget.gradientFactory.apply(cycleLeft));
 
-		DelegatedStencilElement r = AllIcons.I_CONFIG_NEXT.asStencil();
+		DelegatedStencilElement r = BetterIcons.I_CONFIG_NEXT.asStencil();
 		cycleRight = new BoxWidget(0, 0, cycleWidth + 8, 16)
 				.withCustomBackground(Theme.c(Theme.Key.PONDER_BACKGROUND_FLAT))
 				.showingElement(r)

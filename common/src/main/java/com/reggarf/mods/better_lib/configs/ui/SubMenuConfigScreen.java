@@ -1,7 +1,7 @@
 package com.reggarf.mods.better_lib.configs.ui;
 
 import com.reggarf.mods.better_lib.configs.ConfigBase;
-import com.reggarf.mods.better_lib.configs.gui.AllIcons;
+import com.reggarf.mods.better_lib.configs.gui.BetterIcons;
 import com.reggarf.mods.better_lib.configs.gui.ConfirmationScreen;
 import com.reggarf.mods.better_lib.configs.gui.ScreenOpener;
 import com.reggarf.mods.better_lib.configs.gui.Theme;
@@ -86,28 +86,28 @@ public class SubMenuConfigScreen extends ConfigScreen {
 		resetAll = new BoxWidget(listL - 30, yCenter - 25, 20, 20)
 				.withPadding(2, 2)
 				.withCallback(this::resetConfig);
-		resetAll.showingElement(AllIcons.I_CONFIG_RESET.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(resetAll)));
+		resetAll.showingElement(BetterIcons.I_CONFIG_RESET.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(resetAll)));
 		resetAll.getToolTip().add(Component.literal("Reset All"));
 		resetAll.getToolTip().addAll(TooltipHelper.cutStringTextComponent("Click to reset all settings to their default values.", Palette.ALL_GRAY));
 
 		saveChanges = new BoxWidget(listL - 30, yCenter + 5, 20, 20)
 				.withPadding(2, 2)
 				.withCallback(this::saveConfig);
-		saveChanges.showingElement(AllIcons.I_CONFIG_SAVE.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(saveChanges)));
+		saveChanges.showingElement(BetterIcons.I_CONFIG_SAVE.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(saveChanges)));
 		saveChanges.getToolTip().add(Component.literal("Save Changes"));
 		saveChanges.getToolTip().addAll(TooltipHelper.cutStringTextComponent("Click to save any changes made to this config.", Palette.ALL_GRAY));
 
 		discardChanges = new BoxWidget(listL - 30, yCenter + 35, 20, 20)
 				.withPadding(2, 2)
 				.withCallback(this::discardChanges);
-		discardChanges.showingElement(AllIcons.I_CONFIG_DISCARD.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(discardChanges)));
+		discardChanges.showingElement(BetterIcons.I_CONFIG_DISCARD.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(discardChanges)));
 		discardChanges.getToolTip().add(Component.literal("Discard Changes"));
 		discardChanges.getToolTip().addAll(TooltipHelper.cutStringTextComponent("Click to discard all unsaved changes.", Palette.ALL_GRAY));
 
 		goBack = new BoxWidget(listL - 30, yCenter + 65, 20, 20)
 				.withPadding(2, 2)
 				.withCallback(this::attemptBackstep);
-		goBack.showingElement(AllIcons.I_CONFIG_BACK.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(goBack)));
+		goBack.showingElement(BetterIcons.I_CONFIG_BACK.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(goBack)));
 		goBack.getToolTip().add(Component.literal("Go Back"));
 
 		addRenderableWidget(resetAll);
@@ -142,13 +142,13 @@ public class SubMenuConfigScreen extends ConfigScreen {
 				list.children().forEach(e -> e.setEditable(false));
 				resetAll.active = false;
 				saveChanges.active = false;
-				stencil.withStencilRenderer((ms, w, h, alpha) -> AllIcons.I_CONFIG_LOCKED.render(ms, 0, 0));
+				stencil.withStencilRenderer((ms, w, h, alpha) -> BetterIcons.I_CONFIG_LOCKED.render(ms, 0, 0));
 				stencil.withElementRenderer((ms, w, h, alpha) -> UIRenderHelper.angledGradient(ms, 90, 8, 0, 16, 16, red));
 				serverLocked.withBorderColors(red);
 				serverLocked.getToolTip().add(Component.literal("Locked").withStyle(ChatFormatting.BOLD));
 				serverLocked.getToolTip().addAll(TooltipHelper.cutStringTextComponent("You do not have enough permissions to edit the server config.", Palette.ALL_GRAY));
 			} else {
-				stencil.withStencilRenderer((ms, w, h, alpha) -> AllIcons.I_CONFIG_UNLOCKED.render(ms, 0, 0));
+				stencil.withStencilRenderer((ms, w, h, alpha) -> BetterIcons.I_CONFIG_UNLOCKED.render(ms, 0, 0));
 				stencil.withElementRenderer((ms, w, h, alpha) -> UIRenderHelper.angledGradient(ms, 90, 8, 0, 16, 16, green));
 				serverLocked.withBorderColors(green);
 				serverLocked.getToolTip().add(Component.literal("Unlocked").withStyle(ChatFormatting.BOLD));

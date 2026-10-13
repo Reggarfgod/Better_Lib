@@ -13,7 +13,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
 
-public class ConfirmationScreen extends AbstractSimiScreen {
+public class ConfirmationScreen extends BetterScreenBase {
 
 	private Screen source;
 	private Consumer<Response> action = _success -> {};

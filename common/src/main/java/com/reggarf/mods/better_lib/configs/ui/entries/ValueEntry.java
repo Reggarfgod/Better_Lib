@@ -2,7 +2,7 @@ package com.reggarf.mods.better_lib.configs.ui.entries;
 
 import com.google.common.base.Predicates;
 import com.reggarf.mods.better_lib.configs.ConfigBase;
-import com.reggarf.mods.better_lib.configs.gui.AllIcons;
+import com.reggarf.mods.better_lib.configs.gui.BetterIcons;
 import com.reggarf.mods.better_lib.configs.gui.element.DelegatedStencilElement;
 import com.reggarf.mods.better_lib.configs.gui.widget.BoxWidget;
 import com.reggarf.mods.better_lib.configs.ui.ConfigAnnotations;
@@ -35,7 +35,7 @@ public class ValueEntry<T> extends ConfigScreenList.LabeledEntry {
 		this.path = path != null ? path : value.getName();
 
 		resetButton = new BoxWidget(0, 0, resetWidth - 12, 16)
-				.showingElement(AllIcons.I_CONFIG_RESET.asStencil())
+				.showingElement(BetterIcons.I_CONFIG_RESET.asStencil())
 				.withCallback(() -> {
 					setValue(this.value.getDefault());
 					this.onReset();

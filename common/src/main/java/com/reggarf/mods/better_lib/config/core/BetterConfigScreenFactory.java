@@ -9,14 +9,15 @@ import com.reggarf.mods.better_lib.configs.ui.ConfigScreen;
 import com.reggarf.mods.better_lib.configs.ui.SubMenuConfigScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 /**
- * Builds a Create-style config screen from annotated config classes or ConfigBase instances.
+ * Builds a modern Better_Lib configuration screen from annotated config classes or ConfigBase instances.
  */
 public class BetterConfigScreenFactory {
 
     /**
-     * Creates a Create-style BaseConfigScreen showing the 1st page:
+     * Creates a BaseConfigScreen showing the scope selection page:
      * Client Settings, Common Settings, Server Settings.
      */
     public static Screen from(Class<?> configClass, Object configInstance, Screen parent) {
@@ -26,6 +27,12 @@ public class BetterConfigScreenFactory {
         AnnotatedConfigBuilder.ConfigSections sections = AnnotatedConfigBuilder.buildSections(configClass, configInstance);
 
         BaseConfigScreen screen = new BaseConfigScreen(parent, modid);
+        if (annotation != null && !annotation.background().isEmpty()) {
+            ResourceLocation customBg = ResourceLocation.tryParse(annotation.background());
+            if (customBg != null) {
+                screen.withBackground(customBg);
+            }
+        }
         screen.withConfigs(sections.client, sections.common, sections.server);
         return screen;
     }
@@ -51,16 +58,26 @@ public class BetterConfigScreenFactory {
     }
 
     /**
-     * Creates a Create-style BaseConfigScreen for client, common, and server configs.
+     * Creates a BaseConfigScreen for client, common, and server configs.
      */
-    public static Screen fromCreate(Screen parent, String modID, ConfigBase client, ConfigBase common, ConfigBase server) {
+    public static Screen fromScopes(Screen parent, String modID, ConfigBase client, ConfigBase common, ConfigBase server) {
         return new BaseConfigScreen(parent, modID).withConfigs(client, common, server);
     }
 
     /**
-     * Creates a Create-style SubMenuConfigScreen for an individual ConfigBase category.
+     * Creates a SubMenuConfigScreen for an individual ConfigBase category.
      */
-    public static Screen fromCreate(Screen parent, ConfigScreen.ConfigType type, ConfigBase config) {
+    public static Screen fromSubMenu(Screen parent, ConfigScreen.ConfigType type, ConfigBase config) {
         return new SubMenuConfigScreen(parent, type, config);
+    }
+
+    @Deprecated
+    public static Screen fromCreate(Screen parent, String modID, ConfigBase client, ConfigBase common, ConfigBase server) {
+        return fromScopes(parent, modID, client, common, server);
+    }
+
+    @Deprecated
+    public static Screen fromCreate(Screen parent, ConfigScreen.ConfigType type, ConfigBase config) {
+        return fromSubMenu(parent, type, config);
     }
 }

@@ -3,13 +3,14 @@ package com.reggarf.mods.better_lib.platform;
 import java.util.ServiceLoader;
 
 /**
- * Loads whichever VillagerRegistryPlatform implementation the current
+ * Loads whichever platform implementations the current
  * loader's module contributes on the classpath (Fabric, Forge, or
  * NeoForge - only one will ever be present at runtime).
  */
 public final class Services {
 
     public static final VillagerRegistryPlatform PLATFORM = load(VillagerRegistryPlatform.class);
+    public static final ModPlatformHelper MODS = load(ModPlatformHelper.class);
 
     private Services() {
     }

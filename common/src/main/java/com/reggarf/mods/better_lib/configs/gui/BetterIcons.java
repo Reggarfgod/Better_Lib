@@ -7,7 +7,7 @@ import com.reggarf.mods.better_lib.configs.gui.element.ScreenElement;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
-public class AllIcons implements ScreenElement {
+public class BetterIcons implements ScreenElement {
 
 	public static final ResourceLocation ICON_ATLAS = ResourceLocation.fromNamespaceAndPath(Better_lib.MODID, "textures/gui/icons.png");
 	public static final int ICON_ATLAS_SIZE = 256;
@@ -16,7 +16,7 @@ public class AllIcons implements ScreenElement {
 	private int iconX;
 	private int iconY;
 
-	public static final AllIcons
+	public static final BetterIcons
 		I_ADD = newRow(),
 		I_TRASH = next(),
 		I_3x3 = next(),
@@ -33,7 +33,7 @@ public class AllIcons implements ScreenElement {
 		I_RESPECT_NBT = next(),
 		I_IGNORE_NBT = next();
 
-	public static final AllIcons
+	public static final BetterIcons
 		I_CONFIRM = newRow(),
 		I_NONE = next(),
 		I_OPEN_FOLDER = next(),
@@ -50,7 +50,7 @@ public class AllIcons implements ScreenElement {
 		I_CART_ROTATE_PAUSED = next(),
 		I_CART_ROTATE_LOCKED = next();
 
-	public static final AllIcons
+	public static final BetterIcons
 		I_DONT_REPLACE = newRow(),
 		I_REPLACE_SOLID = next(),
 		I_REPLACE_ANY = next(),
@@ -68,7 +68,7 @@ public class AllIcons implements ScreenElement {
 		I_SCROLL = next(),
 		I_RMB = next();
 
-	public static final AllIcons
+	public static final BetterIcons
 		I_TOOL_DEPLOY = newRow(),
 		I_SKIP_MISSING = next(),
 		I_SKIP_BLOCK_ENTITIES = next(),
@@ -151,17 +151,17 @@ public class AllIcons implements ScreenElement {
 		I_FX_BLEND = next(),
 		I_FX_BLEND_OFF = next();
 
-	public AllIcons(int x, int y) {
+	public BetterIcons(int x, int y) {
 		iconX = x * 16;
 		iconY = y * 16;
 	}
 
-	private static AllIcons next() {
-		return new AllIcons(++x, y);
+	private static BetterIcons next() {
+		return new BetterIcons(++x, y);
 	}
 
-	private static AllIcons newRow() {
-		return new AllIcons(x = 0, ++y);
+	private static BetterIcons newRow() {
+		return new BetterIcons(x = 0, ++y);
 	}
 
 	public void bind() {

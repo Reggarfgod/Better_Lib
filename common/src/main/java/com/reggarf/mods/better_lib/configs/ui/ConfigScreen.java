@@ -1,6 +1,6 @@
 package com.reggarf.mods.better_lib.configs.ui;
 
-import com.reggarf.mods.better_lib.configs.gui.AbstractSimiScreen;
+import com.reggarf.mods.better_lib.configs.gui.BetterScreenBase;
 import com.reggarf.mods.better_lib.configs.utility.LerpedFloat;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -8,7 +8,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.commons.lang3.StringUtils;
 
-public abstract class ConfigScreen extends AbstractSimiScreen {
+public abstract class ConfigScreen extends BetterScreenBase {
 
 	public static String modID = "better_lib";
 	public static LerpedFloat cogSpin = LerpedFloat.linear().startWithValue(0);

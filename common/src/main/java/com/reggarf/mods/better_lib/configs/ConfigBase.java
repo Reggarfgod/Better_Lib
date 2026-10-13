@@ -3,8 +3,11 @@ package com.reggarf.mods.better_lib.configs;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -12,6 +15,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.reggarf.mods.better_lib.Better_lib;
+import com.reggarf.mods.better_lib.configs.format.ConfigFormat;
+import com.reggarf.mods.better_lib.configs.format.ConfigFormatHandler;
+import com.reggarf.mods.better_lib.configs.format.ConfigFormatHandlers;
 
 public abstract class ConfigBase {
 
@@ -21,20 +27,123 @@ public abstract class ConfigBase {
 	protected List<CValue<?, ?>> allValues = new ArrayList<>();
 	protected List<ConfigBase> children = new ArrayList<>();
 	protected File configFile;
+	protected ConfigFormat format;
+	protected String modId;
+
+	public ConfigBase() {
+		this(null, null);
+	}
+
+	public ConfigBase(String modId) {
+		this(modId, null);
+	}
+
+	public ConfigBase(ConfigFormat format) {
+		this(null, format);
+	}
+
+	public ConfigBase(String modId, ConfigFormat format) {
+		this.modId = modId;
+		this.format = format;
+	}
 
 	public abstract String getName();
 
+	public String getModId() {
+		return modId != null ? modId : "better_lib";
+	}
+
+	public void setModId(String modId) {
+		this.modId = modId;
+		if (children != null) {
+			for (ConfigBase child : children) {
+				child.setModId(modId);
+			}
+		}
+	}
+
+	public ConfigFormat getFormat() {
+		if (this.format != null) {
+			return this.format;
+		}
+		File existing = findExistingConfigFile();
+		if (existing != null) {
+			this.format = ConfigFormat.fromFile(existing);
+			return this.format;
+		}
+		return ConfigFormat.YAML;
+	}
+
+	public void setFormat(ConfigFormat format) {
+		this.format = format;
+		if (children != null) {
+			for (ConfigBase child : children) {
+				child.setFormat(format);
+			}
+		}
+	}
+
 	public void setConfigFile(File file) {
 		this.configFile = file;
+		if (file != null) {
+			this.format = ConfigFormat.fromFile(file);
+		}
+	}
+
+	public File getConfigFile() {
+		return resolveConfigFile();
+	}
+
+	public File getConfigDirectory() {
+		String id = getModId();
+		if (id == null || id.isEmpty()) {
+			return new File("config");
+		}
+		return new File("config/" + id);
+	}
+
+	public File findExistingConfigFile() {
+		File dir = getConfigDirectory();
+		if (!dir.exists()) {
+			return null;
+		}
+		String[] exts = {"yaml", "yml", "toml", "json", "json5", "xml", "ini"};
+		for (String ext : exts) {
+			File f = new File(dir, getName() + "." + ext);
+			if (f.exists()) {
+				return f;
+			}
+		}
+		return null;
+	}
+
+	public File resolveConfigFile() {
+		if (configFile != null) {
+			return configFile;
+		}
+		File existing = findExistingConfigFile();
+		if (existing != null) {
+			this.format = ConfigFormat.fromFile(existing);
+			this.configFile = existing;
+			return existing;
+		}
+		ConfigFormat fmt = getFormat();
+		String ext = (fmt != null) ? fmt.getExtension() : "yaml";
+		File dir = getConfigDirectory();
+		File preferred = new File(dir, getName() + "." + ext);
+		this.configFile = preferred;
+		return preferred;
 	}
 
 	public void load() {
-		if (configFile != null && configFile.exists()) {
-			try (FileReader reader = new FileReader(configFile)) {
-				JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
-				readFromJson(json);
+		File file = resolveConfigFile();
+		if (file != null && file.exists()) {
+			try {
+				ConfigFormatHandler handler = ConfigFormatHandlers.getHandler(getFormat());
+				Map<String, Object> data = handler.read(file);
+				applyFromMap(data);
 			} catch (Exception e) {
-				Better_lib.LOG.error("Failed to load config file: {}", configFile, e);
+				Better_lib.LOG.error("Failed to load config file: {}", file, e);
 			}
 		}
 		if (children != null) {
@@ -45,24 +154,71 @@ public abstract class ConfigBase {
 	}
 
 	public void save() {
-		if (configFile == null) {
-			configFile = new File("config/better_lib/" + getName() + ".json");
-		}
+		File file = resolveConfigFile();
 		try {
-			if (configFile.getParentFile() != null && !configFile.getParentFile().exists()) {
-				configFile.getParentFile().mkdirs();
+			if (file.getParentFile() != null && !file.getParentFile().exists()) {
+				file.getParentFile().mkdirs();
 			}
-			JsonObject json = new JsonObject();
-			writeToJson(json);
-			try (FileWriter writer = new FileWriter(configFile)) {
-				GSON.toJson(json, writer);
-			}
+			ConfigFormatHandler handler = ConfigFormatHandlers.getHandler(getFormat());
+			Map<String, Object> data = exportToMap();
+			Map<String, String> comments = exportComments();
+			handler.write(file, data, comments);
 		} catch (Exception e) {
-			Better_lib.LOG.error("Failed to save config file: {}", configFile, e);
+			Better_lib.LOG.error("Failed to save config file: {}", file, e);
 		}
 		if (children != null) {
 			for (ConfigBase child : children) {
 				child.save();
+			}
+		}
+	}
+
+	public Map<String, Object> exportToMap() {
+		Map<String, Object> map = new LinkedHashMap<>();
+		for (CValue<?, ?> val : allValues) {
+			if (val instanceof ConfigGroup) continue;
+			map.put(val.getName(), val.getRawValue());
+		}
+		for (ConfigBase child : children) {
+			map.put(child.getName(), child.exportToMap());
+		}
+		return map;
+	}
+
+	public Map<String, String> exportComments() {
+		Map<String, String> commentsMap = new LinkedHashMap<>();
+		exportCommentsInternal("", commentsMap);
+		return commentsMap;
+	}
+
+	private void exportCommentsInternal(String prefix, Map<String, String> map) {
+		for (CValue<?, ?> val : allValues) {
+			if (val instanceof ConfigGroup) continue;
+			String comment = val.getCommentString();
+			if (comment != null && !comment.isEmpty()) {
+				map.put(prefix + val.getName(), comment);
+			}
+		}
+		for (ConfigBase child : children) {
+			String childPrefix = prefix + child.getName() + ".";
+			child.exportCommentsInternal(childPrefix, map);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public void applyFromMap(Map<String, Object> map) {
+		if (map == null) return;
+		for (CValue<?, ?> val : allValues) {
+			if (map.containsKey(val.getName())) {
+				val.setRawValue(map.get(val.getName()));
+			}
+		}
+		for (ConfigBase child : children) {
+			if (map.containsKey(child.getName())) {
+				Object childObj = map.get(child.getName());
+				if (childObj instanceof Map) {
+					child.applyFromMap((Map<String, Object>) childObj);
+				}
 			}
 		}
 	}
@@ -148,6 +304,8 @@ public abstract class ConfigBase {
 	public <T extends ConfigBase> T nested(int depth, Supplier<T> constructor, String... comment) {
 		T config = constructor.get();
 		config.depth = depth;
+		config.modId = this.getModId();
+		config.format = this.getFormat();
 		if (children == null)
 			children = new ArrayList<>();
 		children.add(config);
@@ -193,6 +351,15 @@ public abstract class ConfigBase {
 			return String.join("\n", comments);
 		}
 
+		public Object getRawValue() {
+			if (value instanceof Enum<?> e) {
+				return e.name();
+			}
+			return value;
+		}
+
+		public abstract void setRawValue(Object raw);
+
 		public abstract void readFromJson(JsonElement element);
 		public abstract void writeToJson(JsonObject object);
 	}
@@ -210,6 +377,9 @@ public abstract class ConfigBase {
 		}
 
 		@Override
+		public void setRawValue(Object raw) {}
+
+		@Override
 		public void readFromJson(JsonElement element) {}
 
 		@Override
@@ -219,6 +389,15 @@ public abstract class ConfigBase {
 	public class ConfigBool extends CValue<Boolean, Boolean> {
 		public ConfigBool(String name, boolean def, String... comment) {
 			super(name, def, comment);
+		}
+
+		@Override
+		public void setRawValue(Object raw) {
+			if (raw instanceof Boolean b) {
+				this.value = b;
+			} else if (raw != null) {
+				this.value = Boolean.parseBoolean(raw.toString().trim());
+			}
 		}
 
 		@Override
@@ -240,6 +419,13 @@ public abstract class ConfigBase {
 		}
 
 		@Override
+		public void setRawValue(Object raw) {
+			if (raw != null) {
+				this.value = raw.toString();
+			}
+		}
+
+		@Override
 		public void readFromJson(JsonElement element) {
 			if (element.isJsonPrimitive()) {
 				this.value = element.getAsString();
@@ -258,6 +444,15 @@ public abstract class ConfigBase {
 		}
 
 		@Override
+		public void setRawValue(Object raw) {
+			if (raw != null) {
+				try {
+					this.value = Enum.valueOf(defaultValue.getDeclaringClass(), raw.toString().trim());
+				} catch (Exception ignored) {}
+			}
+		}
+
+		@Override
 		public void readFromJson(JsonElement element) {
 			if (element.isJsonPrimitive()) {
 				try {
@@ -268,7 +463,7 @@ public abstract class ConfigBase {
 
 		@Override
 		public void writeToJson(JsonObject object) {
-			object.addProperty(name, value.name());
+			object.addProperty(name, value != null ? value.name() : defaultValue.name());
 		}
 	}
 
@@ -292,6 +487,17 @@ public abstract class ConfigBase {
 
 		public float getMax() {
 			return max;
+		}
+
+		@Override
+		public void setRawValue(Object raw) {
+			if (raw instanceof Number n) {
+				this.value = Math.max(min, Math.min(max, n.floatValue()));
+			} else if (raw != null) {
+				try {
+					this.value = Math.max(min, Math.min(max, Float.parseFloat(raw.toString().trim())));
+				} catch (NumberFormatException ignored) {}
+			}
 		}
 
 		@Override
@@ -323,6 +529,17 @@ public abstract class ConfigBase {
 
 		public int getMax() {
 			return max;
+		}
+
+		@Override
+		public void setRawValue(Object raw) {
+			if (raw instanceof Number n) {
+				this.value = Math.max(min, Math.min(max, n.intValue()));
+			} else if (raw != null) {
+				try {
+					this.value = Math.max(min, Math.min(max, Integer.parseInt(raw.toString().trim())));
+				} catch (NumberFormatException ignored) {}
+			}
 		}
 
 		@Override
