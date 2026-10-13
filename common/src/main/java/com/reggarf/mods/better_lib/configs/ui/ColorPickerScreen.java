@@ -16,15 +16,13 @@ import java.util.Locale;
 
 /**
  * Modern, high-quality Color Selector dialog.
- * Styled to perfectly match BetterLib config screen theme.
- * Features:
- * - Scenic background backdrop matching config theme
- * - 100% opaque card preventing any background element bleed
- * - Live color preview box
- * - Interactive Red, Green, Blue sliders with numeric readouts
- * - Hex code input (#RRGGBB)
- * - 16-color quick preset palette
- * - Reset and Done buttons
+ * Styled to seamlessly match the BetterLib configuration theme:
+ * - Scenic background backdrop with soft dark overlay
+ * - Main panel matching config sidebar/panel background (0xEE_0F172A)
+ * - Internal control cards matching config settings cards (0xAA_1E293B)
+ * - Sunset landscape banner header
+ * - Smooth anti-aliased rounded edges
+ * - Interactive RGB sliders, live color swatch, hex box, and preset palette
  */
 public class ColorPickerScreen extends Screen {
 
@@ -98,67 +96,95 @@ public class ColorPickerScreen extends Screen {
         graphics.blit(BaseConfigScreen.DEFAULT_BG_TEXTURE, 0, 0, width, height, 0.0f, 0.0f, 1672, 941, 1672, 941);
 
         // Soft darkening overlay for high contrast and depth (matching config theme)
-        graphics.fill(0, 0, width, height, 0x66_090D16);
+        graphics.fill(0, 0, width, height, 0x55_090D16);
 
-        int panelW = 300;
-        int panelH = 224;
+        int panelW = 320;
+        int panelH = 236;
         int panelX = (width - panelW) / 2;
         int panelY = (height - panelH) / 2;
 
-        // Dialog card: 100% opaque solid slate background matching config cards
-        BaseConfigScreen.fillRoundedRect(graphics, panelX, panelY, panelW, panelH, 6, 0xFF_0F172A, 0xFF_334155);
+        // Dialog container: Matching config sidebar/panel background (0xEE_0F172A) with smooth rounded edge
+        BaseConfigScreen.fillRoundedRect(graphics, panelX, panelY, panelW, panelH, 8, 0xEE_0F172A, 0xFF_334155);
 
-        // Header Icon Well (Cyan Dye / Color)
-        BaseConfigScreen.fillRoundedRect(graphics, panelX + 10, panelY + 9, 20, 20, 4, 0xEE_1E293B, 0xFF_38BDF8);
-        graphics.renderFakeItem(new ItemStack(Items.CYAN_DYE), panelX + 12, panelY + 11);
+        // Header Banner with Sunset Landscape Texture slice (matching config category banner)
+        int bannerH = 34;
+        graphics.enableScissor(panelX + 1, panelY + 1, panelX + panelW - 1, panelY + bannerH);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        graphics.blit(BaseConfigScreen.DEFAULT_BG_TEXTURE, panelX, panelY, panelW, bannerH, 0.0f, 180.0f, 1672, 540, 1672, 941);
+        int fadeW = (int) (panelW * 0.7f);
+        BaseConfigScreen.fillGradientH(graphics, panelX, panelY, panelX + fadeW, panelY + bannerH, 0xF2_0B1120, 0x00_0B1120);
+        graphics.fill(panelX, panelY, panelX + panelW, panelY + bannerH, 0x18_090D16);
+        graphics.disableScissor();
+
+        // Header Icon Well (Cyan Dye)
+        BaseConfigScreen.fillRoundedRect(graphics, panelX + 8, panelY + 7, 20, 20, 4, 0xEE_1E293B, 0xFF_38BDF8);
+        graphics.renderFakeItem(new ItemStack(Items.CYAN_DYE), panelX + 10, panelY + 9);
 
         // Header Title & Subtitle
-        graphics.drawString(font, "COLOR SELECTOR", panelX + 34, panelY + 9, 0xFFFFFFFF, true);
-        String sub = font.substrByWidth(Component.literal(settingTitle), panelW - 70).getString();
-        graphics.drawString(font, sub, panelX + 34, panelY + 21, 0xFF38BDF8, true);
+        graphics.drawString(font, "COLOR SELECTOR", panelX + 32, panelY + 8, 0xFFFFFFFF, true);
+        String sub = font.substrByWidth(Component.literal(settingTitle), panelW - 68).getString();
+        graphics.drawString(font, sub, panelX + 32, panelY + 20, 0xFF38BDF8, true);
 
         // Close X button
-        int closeX = panelX + panelW - 24;
-        int closeY = panelY + 9;
+        int closeX = panelX + panelW - 22;
+        int closeY = panelY + 8;
         boolean closeHover = mouseX >= closeX && mouseX <= closeX + 16 && mouseY >= closeY && mouseY <= closeY + 16;
         BaseConfigScreen.fillRoundedRect(graphics, closeX, closeY, 16, 16, 4, closeHover ? 0xFF334155 : 0xFF1E293B, closeHover ? 0xFFFFFFFF : 0xFF475569);
         graphics.drawCenteredString(font, "X", closeX + 8, closeY + 4, closeHover ? 0xFFFFFFFF : 0xFFCBD5E1);
 
-        // Divider line matching config theme
-        graphics.fill(panelX + 8, panelY + 35, panelX + panelW - 8, panelY + 36, 0xFF334155);
+        // Divider line below header banner
+        graphics.fill(panelX + 6, panelY + bannerH, panelX + panelW - 6, panelY + bannerH + 1, 0xFF334155);
 
-        // Left Section: Color Preview Box (54x54) & Hex input
-        int previewX = panelX + 16;
-        int previewY = panelY + 46;
-        int previewW = 54;
-        int previewH = 54;
+        // 1. Left Section: Preview Card (matching config card 0xAA_1E293B)
+        int previewCardX = panelX + 10;
+        int previewCardY = panelY + 40;
+        int previewCardW = 60;
+        int previewCardH = 84;
+        BaseConfigScreen.fillRoundedRect(graphics, previewCardX, previewCardY, previewCardW, previewCardH, 5, 0xAA_1E293B, 0xFF_334155);
+
+        int previewX = previewCardX + 4;
+        int previewY = previewCardY + 4;
+        int previewW = 52;
+        int previewH = 52;
         int currentColor = 0xFF000000 | getColorInt();
-        BaseConfigScreen.fillRoundedRect(graphics, previewX, previewY, previewW, previewH, 4, currentColor, 0xFFFFFFFF);
+        BaseConfigScreen.fillRoundedRect(graphics, previewX, previewY, previewW, previewH, 4, currentColor, 0xFF_38BDF8);
 
-        // Hex Code input box below preview
-        int hexX = previewX;
-        int hexY = previewY + previewH + 8;
-        int hexW = previewW;
+        // Hex Code input box below preview (styled like config inputs)
+        int hexX = previewCardX + 4;
+        int hexY = previewCardY + 60;
+        int hexW = 52;
         int hexH = 18;
         BaseConfigScreen.fillRoundedRect(graphics, hexX, hexY, hexW, hexH, 4, 0xFF0F172A, hexFocused ? 0xFF38BDF8 : 0xFF334155);
         String currentHex = (hexFocused && hexText != null) ? hexText + (System.currentTimeMillis() % 1000 > 500 ? "_" : "") : String.format(Locale.ROOT, "#%06X", getColorInt());
         graphics.drawCenteredString(font, currentHex, hexX + hexW / 2, hexY + 5, hexFocused ? 0xFF38BDF8 : 0xFFFFFFFF);
 
-        // Right Section: 3 Sliders (Red, Green, Blue)
-        int slidersX = panelX + 84;
-        int slidersY = panelY + 46;
-        int sliderW = 140;
-        int sliderH = 12;
+        // 2. Right Section: Sliders Card (matching config card 0xAA_1E293B)
+        int sliderCardX = panelX + 76;
+        int sliderCardY = panelY + 40;
+        int sliderCardW = panelW - 86;
+        int sliderCardH = 84;
+        BaseConfigScreen.fillRoundedRect(graphics, sliderCardX, sliderCardY, sliderCardW, sliderCardH, 5, 0xAA_1E293B, 0xFF_334155);
 
-        renderChannelSlider(graphics, slidersX, slidersY, sliderW, sliderH, "R", red, 0xFFEF4444, mouseX, mouseY);
-        renderChannelSlider(graphics, slidersX, slidersY + 24, sliderW, sliderH, "G", green, 0xFF22C55E, mouseX, mouseY);
-        renderChannelSlider(graphics, slidersX, slidersY + 48, sliderW, sliderH, "B", blue, 0xFF38BDF8, mouseX, mouseY);
+        int sliderStartX = sliderCardX + 8;
+        int sliderW = sliderCardW - 16;
+        renderChannelSlider(graphics, 0, sliderStartX, sliderCardY + 7, sliderW, 12, "R", red, 0xFFEF4444, mouseX, mouseY);
+        renderChannelSlider(graphics, 1, sliderStartX, sliderCardY + 31, sliderW, 12, "G", green, 0xFF22C55E, mouseX, mouseY);
+        renderChannelSlider(graphics, 2, sliderStartX, sliderCardY + 55, sliderW, 12, "B", blue, 0xFF38BDF8, mouseX, mouseY);
 
-        // Preset Color Swatches (2 rows of 8)
-        int presetStartX = panelX + 16;
-        int presetStartY = panelY + 138;
-        int swatchSize = 13;
-        int swatchGap = 4;
+        // 3. Bottom Section: Palette Card (matching config card 0xAA_1E293B)
+        int paletteCardX = panelX + 10;
+        int paletteCardY = panelY + 130;
+        int paletteCardW = panelW - 20;
+        int paletteCardH = 48;
+        BaseConfigScreen.fillRoundedRect(graphics, paletteCardX, paletteCardY, paletteCardW, paletteCardH, 5, 0xAA_1E293B, 0xFF_334155);
+
+        int swatchSize = 14;
+        int swatchGap = 6;
+        int totalSwatchesW = 8 * swatchSize + 7 * swatchGap; // 154
+        int presetStartX = paletteCardX + (paletteCardW - totalSwatchesW) / 2;
+        int presetStartY = paletteCardY + 7;
 
         for (int i = 0; i < PRESETS.length; i++) {
             int row = i / 8;
@@ -170,64 +196,72 @@ public class ColorPickerScreen extends Screen {
             BaseConfigScreen.fillRoundedRect(graphics, sx, sy, swatchSize, swatchSize, 3, pColor, sHover ? 0xFF38BDF8 : 0xFF334155);
         }
 
-        // Action Buttons at bottom
-        int doneW = 72;
+        // Action Buttons at bottom (styled exactly like config top-bar buttons)
+        int doneW = 68;
         int doneH = 20;
-        int doneX = panelX + panelW - doneW - 14;
-        int doneY = panelY + panelH - doneH - 12;
+        int doneX = panelX + panelW - doneW - 12;
+        int doneY = panelY + panelH - doneH - 8;
         boolean doneHover = mouseX >= doneX && mouseX <= doneX + doneW && mouseY >= doneY && mouseY <= doneY + doneH;
-        BaseConfigScreen.fillRoundedRect(graphics, doneX, doneY, doneW, doneH, 4, doneHover ? 0xFF0284C7 : 0xFF1E293B, doneHover ? 0xFF38BDF8 : 0xFF475569);
+        BaseConfigScreen.fillRoundedRect(graphics, doneX, doneY, doneW, doneH, 4, doneHover ? 0xFF0284C7 : 0xFF1E293B, doneHover ? 0xFFFFFFFF : 0xFF38BDF8);
         graphics.drawCenteredString(font, "Done", doneX + doneW / 2, doneY + 6, doneHover ? 0xFFFFFFFF : 0xFFE2E8F0);
 
         int resetW = 60;
         int resetX = doneX - resetW - 8;
         boolean resetHover = mouseX >= resetX && mouseX <= resetX + resetW && mouseY >= doneY && mouseY <= doneY + doneH;
-        BaseConfigScreen.fillRoundedRect(graphics, resetX, doneY, resetW, doneH, 4, resetHover ? 0xFF334155 : 0xFF1E293B, resetHover ? 0xFF38BDF8 : 0xFF475569);
+        BaseConfigScreen.fillRoundedRect(graphics, resetX, doneY, resetW, doneH, 4, resetHover ? 0xFF334155 : 0xFF1E293B, resetHover ? 0xFF38BDF8 : 0xFF334155);
         graphics.drawCenteredString(font, "Reset", resetX + resetW / 2, doneY + 6, resetHover ? 0xFF38BDF8 : 0xFFCBD5E1);
     }
 
-    private void renderChannelSlider(GuiGraphics graphics, int x, int y, int width, int height, String label, int value, int color, int mouseX, int mouseY) {
-        // Label (R, G, B)
+    private void renderChannelSlider(GuiGraphics graphics, int sliderIndex, int x, int y, int width, int height, String label, int value, int color, int mouseX, int mouseY) {
+        // Label (R, G, B) with shadow
         graphics.drawString(font, label, x, y + 2, color, true);
 
         int trackX = x + 14;
-        int trackY = y;
-        int trackW = width - 44;
+        int badgeW = 34;
+        int badgeH = 16;
+        int trackW = width - 14 - badgeW - 8;
         int trackH = height;
 
         float progress = (float) value / 255.0f;
+        boolean mouseOverTrack = mouseX >= trackX - 2 && mouseX <= trackX + trackW + 2 && mouseY >= y - 3 && mouseY <= y + trackH + 3;
 
-        // Groove
-        BaseConfigScreen.fillRoundedRect(graphics, trackX, trackY, trackW, trackH, 4, 0xFF0F172A, 0xFF334155);
+        // 1. Sleek Track Groove (matching IntSliderSetting)
+        BaseConfigScreen.fillRoundedRect(graphics, trackX, y, trackW, trackH, 4, 0xFF0F172A, mouseOverTrack ? 0xFF475569 : 0xFF334155);
 
-        // Fill
-        int thumbW = 8;
+        // 2. Filled Progress Area
+        int thumbW = 10;
+        int thumbH = 16;
         int thumbX = trackX + (int) (progress * (trackW - thumbW));
-        int fillW = thumbX - trackX + thumbW / 2;
-        if (fillW > 2) {
-            BaseConfigScreen.fillRoundedRect(graphics, trackX + 1, trackY + 1, fillW, trackH - 2, 3, color, color);
+        int thumbY = y - 2;
+
+        int fillW = (thumbX - trackX) + thumbW / 2;
+        if (fillW > 3) {
+            BaseConfigScreen.fillRoundedRect(graphics, trackX + 1, y + 1, fillW, trackH - 2, 3, color, color);
         }
 
-        // Thumb
-        BaseConfigScreen.fillRoundedRect(graphics, thumbX, trackY - 2, thumbW, trackH + 4, 3, 0xFFFFFFFF, color);
+        // 3. Thumb Handle (Vertical rounded pill matching config screen sliders)
+        boolean highlightThumb = (activeSlider == sliderIndex || mouseOverTrack);
+        int thumbFill = highlightThumb ? 0xFF38BDF8 : 0xFFF8FAFC;
+        int thumbBorder = highlightThumb ? 0xFFFFFFFF : 0xFF38BDF8;
+        BaseConfigScreen.fillRoundedRect(graphics, thumbX, thumbY, thumbW, thumbH, 4, thumbFill, thumbBorder);
 
-        // Numeric Badge
-        int badgeX = trackX + trackW + 6;
-        int badgeW = 28;
-        BaseConfigScreen.fillRoundedRect(graphics, badgeX, trackY - 1, badgeW, trackH + 2, 3, 0xFF1E293B, 0xFF334155);
-        graphics.drawCenteredString(font, String.valueOf(value), badgeX + badgeW / 2, trackY + 1, 0xFFFFFFFF);
+        // 4. Value Badge (Separate chip on the right matching config screen sliders)
+        int badgeX = trackX + trackW + 8;
+        int badgeY = y - 2;
+        BaseConfigScreen.fillRoundedRect(graphics, badgeX, badgeY, badgeW, badgeH, 4, 0xFF1E293B, 0xFF334155);
+        graphics.drawCenteredString(font, String.valueOf(value), badgeX + badgeW / 2, badgeY + 4, 0xFFFFFFFF);
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int panelW = 300;
-        int panelH = 224;
+        int panelW = 320;
+        int panelH = 236;
         int panelX = (width - panelW) / 2;
         int panelY = (height - panelH) / 2;
 
         // Close X
-        int closeX = panelX + panelW - 24;
-        int closeY = panelY + 9;
+        int closeX = panelX + panelW - 22;
+        int closeY = panelY + 8;
         if (mouseX >= closeX && mouseX <= closeX + 16 && mouseY >= closeY && mouseY <= closeY + 16) {
             apply();
             Minecraft.getInstance().setScreen(parent);
@@ -235,10 +269,10 @@ public class ColorPickerScreen extends Screen {
         }
 
         // Done button
-        int doneW = 72;
+        int doneW = 68;
         int doneH = 20;
-        int doneX = panelX + panelW - doneW - 14;
-        int doneY = panelY + panelH - doneH - 12;
+        int doneX = panelX + panelW - doneW - 12;
+        int doneY = panelY + panelH - doneH - 8;
         if (mouseX >= doneX && mouseX <= doneX + doneW && mouseY >= doneY && mouseY <= doneY + doneH) {
             apply();
             Minecraft.getInstance().setScreen(parent);
@@ -254,13 +288,13 @@ public class ColorPickerScreen extends Screen {
         }
 
         // Hex Box
-        int previewX = panelX + 16;
-        int previewY = panelY + 46;
-        int previewW = 54;
-        int hexX = previewX;
-        int hexY = previewY + previewW + 8;
+        int previewCardX = panelX + 10;
+        int previewCardY = panelY + 40;
+        int hexX = previewCardX + 4;
+        int hexY = previewCardY + 60;
+        int hexW = 52;
         int hexH = 18;
-        if (mouseX >= hexX && mouseX <= hexX + previewW && mouseY >= hexY && mouseY <= hexY + hexH) {
+        if (mouseX >= hexX && mouseX <= hexX + hexW && mouseY >= hexY && mouseY <= hexY + hexH) {
             hexFocused = true;
             if (hexText == null) {
                 hexText = String.format(Locale.ROOT, "#%06X", getColorInt());
@@ -274,15 +308,18 @@ public class ColorPickerScreen extends Screen {
         }
 
         // Check 3 Sliders
-        int slidersX = panelX + 84;
-        int slidersY = panelY + 46;
-        int sliderW = 140;
-        int trackX = slidersX + 14;
-        int trackW = sliderW - 44;
+        int sliderCardX = panelX + 76;
+        int sliderCardY = panelY + 40;
+        int sliderCardW = panelW - 86;
+        int sliderStartX = sliderCardX + 8;
+        int sliderW = sliderCardW - 16;
+        int trackX = sliderStartX + 14;
+        int badgeW = 34;
+        int trackW = sliderW - 14 - badgeW - 8;
 
         for (int i = 0; i < 3; i++) {
-            int sy = slidersY + i * 24;
-            if (mouseX >= trackX - 2 && mouseX <= trackX + trackW + 2 && mouseY >= sy - 4 && mouseY <= sy + 16) {
+            int sy = sliderCardY + 7 + i * 24;
+            if (mouseX >= trackX - 2 && mouseX <= trackX + trackW + 2 && mouseY >= sy - 3 && mouseY <= sy + 15) {
                 activeSlider = i;
                 updateSliderFromMouse(i, mouseX, trackX, trackW);
                 return true;
@@ -290,10 +327,15 @@ public class ColorPickerScreen extends Screen {
         }
 
         // Check Presets
-        int presetStartX = panelX + 16;
-        int presetStartY = panelY + 138;
-        int swatchSize = 13;
-        int swatchGap = 4;
+        int paletteCardX = panelX + 10;
+        int paletteCardY = panelY + 130;
+        int paletteCardW = panelW - 20;
+        int swatchSize = 14;
+        int swatchGap = 6;
+        int totalSwatchesW = 8 * swatchSize + 7 * swatchGap;
+        int presetStartX = paletteCardX + (paletteCardW - totalSwatchesW) / 2;
+        int presetStartY = paletteCardY + 7;
+
         for (int i = 0; i < PRESETS.length; i++) {
             int row = i / 8;
             int col = i % 8;
@@ -309,7 +351,7 @@ public class ColorPickerScreen extends Screen {
     }
 
     private void updateSliderFromMouse(int slider, double mouseX, int trackX, int trackW) {
-        int thumbW = 8;
+        int thumbW = 10;
         float progress = (float) (mouseX - trackX - thumbW / 2.0f) / (float) (trackW - thumbW);
         progress = Mth.clamp(progress, 0.0f, 1.0f);
         int val = Math.round(progress * 255.0f);
@@ -322,12 +364,15 @@ public class ColorPickerScreen extends Screen {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (activeSlider >= 0) {
-            int panelW = 300;
+            int panelW = 320;
             int panelX = (width - panelW) / 2;
-            int slidersX = panelX + 84;
-            int sliderW = 140;
-            int trackX = slidersX + 14;
-            int trackW = sliderW - 44;
+            int sliderCardX = panelX + 76;
+            int sliderCardW = panelW - 86;
+            int sliderStartX = sliderCardX + 8;
+            int sliderW = sliderCardW - 16;
+            int trackX = sliderStartX + 14;
+            int badgeW = 34;
+            int trackW = sliderW - 14 - badgeW - 8;
             updateSliderFromMouse(activeSlider, mouseX, trackX, trackW);
             return true;
         }

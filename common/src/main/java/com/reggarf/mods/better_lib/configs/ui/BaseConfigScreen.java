@@ -1345,6 +1345,9 @@ public class BaseConfigScreen extends Screen {
 			return;
 		}
 
+		RenderSystem.enableBlend();
+		RenderSystem.defaultBlendFunc();
+
 		// 1. Central body and horizontal/vertical spans
 		graphics.fill(x + radius, y, x + width - radius, y + height, bgColor);
 		graphics.fill(x, y + radius, x + radius, y + height - radius, bgColor);
@@ -1358,29 +1361,45 @@ public class BaseConfigScreen extends Screen {
 			graphics.fill(x + width - 1, y + radius, x + width, y + height - radius, borderColor);
 		}
 
-		// 3. Crisp, clean rounded corners
-		float rSq = (radius - 0.25f) * (radius - 0.25f);
-		float innerRSq = (radius - 1.25f) * (radius - 1.25f);
+		// 3. Smooth, anti-aliased rounded corners
+		float rOuter = radius;
+		float rInner = Math.max(0.0f, radius - 1.25f);
 
 		for (int cy = 0; cy < radius; cy++) {
 			for (int cx = 0; cx < radius; cx++) {
 				float dx = (radius - cx) - 0.5f;
 				float dy = (radius - cy) - 0.5f;
-				float dSq = dx * dx + dy * dy;
+				float dist = (float) Math.sqrt(dx * dx + dy * dy);
 
-				if (dSq <= rSq) {
-					int pixelColor = (borderColor != bgColor && dSq >= innerRSq) ? borderColor : bgColor;
-
-					// 4 Symmetrical Corners
-					// Top-Left
-					graphics.fill(x + cx, y + cy, x + cx + 1, y + cy + 1, pixelColor);
-					// Top-Right
-					graphics.fill(x + width - 1 - cx, y + cy, x + width - cx, y + cy + 1, pixelColor);
-					// Bottom-Left
-					graphics.fill(x + cx, y + height - 1 - cy, x + cx + 1, y + height - cy, pixelColor);
-					// Bottom-Right
-					graphics.fill(x + width - 1 - cx, y + height - 1 - cy, x + width - cx, y + height - cy, pixelColor);
+				if (dist > rOuter + 0.5f) {
+					continue;
 				}
+
+				int pixelColor;
+				if (dist <= rOuter - 0.5f) {
+					// Fully covered inside corner
+					pixelColor = (borderColor != bgColor && dist >= rInner) ? borderColor : bgColor;
+				} else {
+					// Edge antialiasing: smooth fractional coverage on the outer rim
+					float coverage = Mth.clamp(rOuter + 0.5f - dist, 0.0f, 1.0f);
+					int baseColor = (borderColor != bgColor) ? borderColor : bgColor;
+					int baseA = (baseColor >> 24) & 0xFF;
+					int r = (baseColor >> 16) & 0xFF;
+					int g = (baseColor >> 8) & 0xFF;
+					int b = baseColor & 0xFF;
+					int blendedA = Math.round(baseA * coverage);
+					pixelColor = (blendedA << 24) | (r << 16) | (g << 8) | b;
+				}
+
+				// 4 Symmetrical Corners
+				// Top-Left
+				graphics.fill(x + cx, y + cy, x + cx + 1, y + cy + 1, pixelColor);
+				// Top-Right
+				graphics.fill(x + width - 1 - cx, y + cy, x + width - cx, y + cy + 1, pixelColor);
+				// Bottom-Left
+				graphics.fill(x + cx, y + height - 1 - cy, x + cx + 1, y + height - cy, pixelColor);
+				// Bottom-Right
+				graphics.fill(x + width - 1 - cx, y + height - 1 - cy, x + width - cx, y + height - cy, pixelColor);
 			}
 		}
 	}
