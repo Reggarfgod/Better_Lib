@@ -1,0 +1,23 @@
+plugins {
+    id 'java-library'
+    id 'idea'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "${mod_id}-common"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(project.hasProperty('java_version') ? project.java_version as int : 21)
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets.main.java.srcDirs = []
+
+dependencies {
+    api 'com.google.code.gson:gson:2.10.1'
+}

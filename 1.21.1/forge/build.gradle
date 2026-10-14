@@ -1,0 +1,113 @@
+plugins {
+    id 'net.minecraftforge.gradle' version '[6.0.24, 6.2)'
+    id 'org.spongepowered.mixin' version '0.7.38'
+    id 'maven-publish'
+}
+
+base {
+    archivesName = "${mod_id}-forge-1.21.1"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(project.java_version as int)
+    }
+}
+
+// Merge the resources and classes into the same directory for Forge 1.20.2+ module system.
+sourceSets.configureEach {
+    def dir = layout.buildDirectory.dir("sourcesSets/$name")
+    output.resourcesDir = dir
+    java.destinationDirectory = dir
+}
+
+minecraft {
+    mappings channel: 'official', version: "${minecraft_version}"
+
+    copyIdeResources = true
+    reobf = false
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                "${mod_id}" {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+sourceSets.main.java {
+    srcDir 'src/main/java'
+    srcDir file('../common/src/main/java')
+}
+
+sourceSets.main.resources {
+    srcDir file('../common/src/main/resources')
+}
+
+mixin {
+    add sourceSets.main, "better_lib.refmap.json"
+    config "better_lib.mixins.json"
+}
+
+tasks.named('jar', Jar).configure {
+    manifest {
+        attributes([
+                'Specification-Title'     : mod_id,
+                'Specification-Vendor'    : mod_authors,
+                'Specification-Version'   : '1',
+                'Implementation-Title'    : project.name,
+                'Implementation-Version'  : project.jar.archiveVersion,
+                'Implementation-Vendor'   : mod_authors,
+                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                'MixinConfigs'            : 'better_lib.mixins.json'
+        ])
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url = "https://maven.minecraftforge.net/" }
+    maven {
+        url = "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version_1_21}"
+
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
+}
+
+processResources {
+    var replaceProperties = [
+            minecraft_version          : minecraft_version,
+            minecraft_version_range    : minecraft_version_range,
+            forge_version              : forge_version_1_21,
+            forge_loader_version_range : forge_loader_version_range,
+            mod_id                     : mod_id,
+            mod_name                   : mod_name,
+            mod_version                : mod_version,
+            version                    : mod_version,
+            mod_authors                : mod_authors,
+            mod_author                 : mod_authors,
+            mod_description            : mod_description,
+            description                : mod_description,
+            mod_license                : mod_license,
+            license                    : mod_license,
+            credits                    : credits
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties
+    }
+}

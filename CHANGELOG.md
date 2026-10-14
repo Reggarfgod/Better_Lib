@@ -1,6 +1,20 @@
 # Better_Lib Changelog
 
-## Version 1.0.112 (Minecraft 1.21.1)
+## Version 1.0.112 (Multi-Version & Multi-Loader Architecture)
+
+### Multi-Version Environment Overhaul
+- **Multi-Version Project Architecture (Parity with zap-hosting-server-integration-menu Multi-Ver-dev)**:
+  - Transitioned the entire repository from single-version root structure into organized version-based subprojects:
+    - **Minecraft 1.20.1**: Forge (`1.20.1:forge`) and Fabric (`1.20.1:fabric`).
+    - **Minecraft 1.21.1**: NeoForge (`1.21.1:neoforge`), Fabric (`1.21.1:fabric`), and Forge (`1.21.1:forge`).
+    - **Minecraft 1.21.11**: NeoForge (`1.21.11:neoforge`), Fabric (`1.21.11:fabric`), and Forge (`1.21.11:forge`).
+    - **Minecraft 26.1 and above**: NeoForge (`26.1:neoforge`), Fabric (`26.1:fabric`), and Forge (`26.1:forge`).
+  - **Unified Root Build**:
+    - Centralized `settings.gradle` coordinating all version subprojects and plugin management repositories.
+    - Simplified root `build.gradle` with clean all-projects repository and artifact metadata handling.
+    - Centralized `gradle.properties` managing version specifications, JVM args, and loader compatibility targets across Java 17, 21, and 25.
+  - **Shared Common Module**:
+    - Central `:common` subproject providing shared resources (textures, lang files, branding assets, logos, and config models) seamlessly linked to all loaders.
 
 ### Features & Enhancements
 - **Other Mod Configuration Support (Create Mod Parity)**:
@@ -19,10 +33,10 @@
   - **Boolean Switch**: Smooth animated pill toggle.
   - **Int & Float Sliders**: Slide freely or right-click to enter precise numeric values with overflow prevention.
   - **Enum & Dropdown Selectors**: Click-to-cycle selectors.
-  - **Color Picker**: Live color swatch with typable hex code input.
-  - **Text Box**: Typable string configuration.
+  - **Color Picker**: Live color swatch with typable hex code input and smooth corner rendering.
+  - **Text Box**: Typable string configuration with full cursor positioning and click navigation.
 
 - **Multi-Loader Architecture & Clean Refactoring**:
   - Renamed all UI classes to clean, independent Better_Lib components (`BetterScreenBase`, `BetterWidgetBase`, `BetterIcons`, `BetterLibConfigScreen`) removing legacy references.
   - Native multi-platform adapters for NeoForge (`ModConfigAdapter`), Forge (`ForgeModConfigAdapter`), and Fabric (`FabricModHelper`).
-  - Full support on Java 21 across NeoForge, Forge, and Fabric.
+  - Clean compilation across all configured loaders and environments.

@@ -1,0 +1,198 @@
+package com.reggarf.mods.better_lib.configs.gui.widget;
+
+import com.reggarf.mods.better_lib.configs.gui.Theme;
+import com.reggarf.mods.better_lib.configs.gui.Theme.Key;
+import com.reggarf.mods.better_lib.configs.gui.UIRenderHelper;
+import com.reggarf.mods.better_lib.configs.gui.element.BoxElement;
+import com.reggarf.mods.better_lib.configs.gui.element.DelegatedStencilElement;
+import com.reggarf.mods.better_lib.configs.utility.Color;
+import com.reggarf.mods.better_lib.configs.utility.Couple;
+import com.reggarf.mods.better_lib.configs.utility.LerpedFloat;
+import java.util.function.Function;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.input.MouseButtonEvent;
+
+public class BoxWidget extends ElementWidget {
+
+	public static final Function<BoxWidget, DelegatedStencilElement.ElementRenderer> gradientFactory =
+			(box) -> (graphics, w, h, alpha) -> UIRenderHelper.angledGradient(graphics, 90, box.getX(), box.getY(), w, h, box.gradientColor1, box.gradientColor2);
+
+	protected BoxElement box;
+	protected Color customBorderTop;
+	protected Color customBorderBot;
+	protected Color customBackground;
+	protected boolean animateColors = true;
+	protected LerpedFloat colorAnimation = LerpedFloat.linear();
+
+	protected Color gradientColor1, gradientColor2;
+	private Color previousColor1, previousColor2;
+	private Color colorTarget1 = Theme.c(getIdleTheme(), true).copy();
+	private Color colorTarget2 = Theme.c(getIdleTheme(), false).copy();
+
+	public BoxWidget() {
+		this(0, 0);
+	}
+
+	public BoxWidget(int x, int y) {
+		this(x, y, 16, 16);
+	}
+
+	public BoxWidget(int x, int y, int width, int height) {
+		super(x, y, width, height);
+		box = new BoxElement()
+				.at(x, y)
+				.withBounds(width, height);
+		gradientColor1 = colorTarget1;
+		gradientColor2 = colorTarget2;
+	}
+
+	public <T extends BoxWidget> T withBounds(int width, int height) {
+		this.width = width;
+		this.height = height;
+		return (T) this;
+	}
+
+	public <T extends BoxWidget> T withBorderColors(Couple<Color> colors) {
+		this.customBorderTop = colors.getFirst();
+		this.customBorderBot = colors.getSecond();
+		updateColorsFromState();
+		return (T) this;
+	}
+
+	public <T extends BoxWidget> T withBorderColors(Color top, Color bot) {
+		this.customBorderTop = top;
+		this.customBorderBot = bot;
+		updateColorsFromState();
+		return (T) this;
+	}
+
+	public <T extends BoxWidget> T withCustomBackground(Color color) {
+		this.customBackground = color;
+		return (T) this;
+	}
+
+	@Override
+	public void tick() {
+		super.tick();
+		colorAnimation.tickChaser();
+	}
+
+	@Override
+	public void onClick(MouseButtonEvent event, boolean doubleClick) {
+		super.onClick(event, doubleClick);
+		gradientColor1 = Theme.c(getClickTheme(), true);
+		gradientColor2 = Theme.c(getClickTheme(), false);
+		startGradientAnimation(getColorForState(true), getColorForState(false), true, 0.15);
+	}
+
+	@Override
+	protected void beforeRender(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
+		super.beforeRender(graphics, mouseX, mouseY, partialTicks);
+
+		if (isHovered != wasHovered) {
+			startGradientAnimation(
+					getColorForState(true),
+					getColorForState(false),
+					isHovered
+			);
+		}
+
+		if (colorAnimation.settled()) {
+			gradientColor1 = colorTarget1;
+			gradientColor2 = colorTarget2;
+		} else {
+			float animationValue = 1 - Math.abs(colorAnimation.getValue(partialTicks));
+			gradientColor1 = Color.mixColors(previousColor1, colorTarget1, animationValue);
+			gradientColor2 = Color.mixColors(previousColor2, colorTarget2, animationValue);
+		}
+	}
+
+	@Override
+	public void doRender(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
+		float fadeValue = fade.getValue(partialTicks);
+		if (fadeValue < .1f)
+			return;
+
+		box.withAlpha(fadeValue);
+		box.withBackground(customBackground != null ? customBackground : Theme.c(Theme.Key.PONDER_BACKGROUND_TRANSPARENT))
+				.gradientBorder(gradientColor1, gradientColor2)
+				.at(getX(), getY(), z)
+				.withBounds(width, height)
+				.render(graphics);
+
+		super.doRender(graphics, mouseX, mouseY, partialTicks);
+		wasHovered = isHovered;
+	}
+
+	@Override
+	public boolean isMouseOver(double mX, double mY) {
+		if (!active || !visible)
+			return false;
+
+		float padX = 2 + paddingX;
+		float padY = 2 + paddingY;
+
+		return getX() - padX <= mX && getY() - padY <= mY && mX < getX() + padX + width && mY < getY() + padY + height;
+	}
+
+	public BoxElement getBox() {
+		return box;
+	}
+
+	public void updateColorsFromState() {
+		colorTarget1 = getColorForState(true);
+		colorTarget2 = getColorForState(false);
+	}
+
+	public void animateGradientFromState() {
+		startGradientAnimation(
+				getColorForState(true),
+				getColorForState(false),
+				true
+		);
+	}
+
+	private void startGradientAnimation(Color c1, Color c2, boolean positive, double expSpeed) {
+		if (!animateColors)
+			return;
+
+		colorAnimation.startWithValue(positive ? 1 : -1);
+		colorAnimation.chase(0, expSpeed, LerpedFloat.Chaser.EXP);
+		colorAnimation.tickChaser();
+
+		previousColor1 = gradientColor1;
+		previousColor2 = gradientColor2;
+
+		colorTarget1 = c1;
+		colorTarget2 = c2;
+	}
+
+	private void startGradientAnimation(Color c1, Color c2, boolean positive) {
+		startGradientAnimation(c1, c2, positive, 0.6);
+	}
+
+	private Color getColorForState(boolean first) {
+		if (!active) {
+			return Theme.c(Theme.Key.BUTTON_DISABLE, first);
+		}
+
+		if (isHovered) {
+			return Theme.c(getHoverTheme(), first);
+		}
+
+		return customBorderTop != null ? (first ? customBorderTop : customBorderBot) : Theme.c(getIdleTheme(), first);
+	}
+
+	protected Key getIdleTheme() {
+		return Theme.Key.BUTTON_IDLE;
+	}
+
+	protected Key getHoverTheme() {
+		return Theme.Key.BUTTON_HOVER;
+	}
+
+	protected Key getClickTheme() {
+		return Theme.Key.BUTTON_CLICK;
+	}
+
+}

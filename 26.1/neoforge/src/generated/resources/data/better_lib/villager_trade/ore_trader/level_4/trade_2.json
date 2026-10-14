@@ -1,0 +1,15 @@
+{
+  "additional_wants": {
+    "count": 12.0,
+    "id": "minecraft:gold_ingot"
+  },
+  "gives": {
+    "id": "minecraft:golden_pickaxe"
+  },
+  "reputation_discount": 0.05,
+  "wants": {
+    "count": 8.0,
+    "id": "minecraft:emerald"
+  },
+  "xp": 15.0
+}

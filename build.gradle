@@ -1,6 +1,14 @@
 plugins {
-    // see https://fabricmc.net/develop/ for new versions
-    id 'fabric-loom' version '1.8-SNAPSHOT' apply false
-    // see https://projects.neoforged.net/neoforged/moddevgradle for new versions
-    id 'net.neoforged.moddev' version '2.0.49-beta' apply false
+    id 'base'
+}
+
+allprojects {
+    group = project.findProperty('mod_group_id') ?: 'com.reggarf.mods'
+    version = project.findProperty('mod_version') ?: '1.0.112'
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url = "https://cursemaven.com" }
+    }
 }

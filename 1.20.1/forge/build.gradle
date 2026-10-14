@@ -1,0 +1,90 @@
+plugins {
+    id 'dev.architectury.loom' version '1.13.468'
+    id 'maven-publish'
+}
+
+base {
+    archivesName = "${mod_id}-forge-1.20.1"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(project.java_version_1_20 as int)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = project.java_version_1_20 as int
+}
+
+def java17Launcher = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(project.java_version_1_20 as int)
+}
+
+tasks.withType(JavaExec).configureEach {
+    javaLauncher = java17Launcher
+}
+
+loom {
+    forge {
+        mixinConfig "better_lib.mixins.json"
+        mixinConfig "better_lib.forge.mixins.json"
+    }
+}
+
+sourceSets.main.java {
+    srcDir 'src/main/java'
+    srcDir file('../common/src/main/java')
+}
+
+sourceSets.main.resources {
+    srcDir file('../common/src/main/resources')
+}
+
+tasks.withType(ProcessResources).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+repositories {
+    mavenCentral()
+    maven { url = "https://maven.minecraftforge.net/" }
+    maven {
+        url = "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version_1_20}"
+    mappings loom.officialMojangMappings()
+    forge "net.minecraftforge:forge:${minecraft_version_1_20}-${forge_version_1_20}"
+
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
+    implementation("io.github.llamalad7:mixinextras-forge:0.4.1")
+    modImplementation("io.github.llamalad7:mixinextras-forge:0.4.1")
+}
+
+processResources {
+    var replaceProperties = [
+            minecraft_version          : minecraft_version_1_20,
+            forge_version              : forge_version_1_20,
+            mod_id                     : mod_id,
+            mod_name                   : mod_name,
+            mod_version                : mod_version,
+            version                    : mod_version,
+            mod_authors                : mod_authors,
+            mod_author                 : mod_authors,
+            mod_description            : mod_description,
+            description                : mod_description,
+            mod_license                : mod_license,
+            license                    : mod_license,
+            credits                    : credits
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties
+    }
+}

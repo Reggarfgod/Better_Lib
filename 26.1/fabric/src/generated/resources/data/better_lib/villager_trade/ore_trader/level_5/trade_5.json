@@ -1,0 +1,11 @@
+{
+  "gives": {
+    "count": 18,
+    "id": "minecraft:emerald"
+  },
+  "reputation_discount": 0.05,
+  "wants": {
+    "id": "minecraft:ancient_debris"
+  },
+  "xp": 20.0
+}

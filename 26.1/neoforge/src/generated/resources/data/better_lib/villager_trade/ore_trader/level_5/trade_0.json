@@ -1,0 +1,11 @@
+{
+  "gives": {
+    "id": "minecraft:netherite_scrap"
+  },
+  "reputation_discount": 0.05,
+  "wants": {
+    "count": 12.0,
+    "id": "minecraft:emerald"
+  },
+  "xp": 20.0
+}
