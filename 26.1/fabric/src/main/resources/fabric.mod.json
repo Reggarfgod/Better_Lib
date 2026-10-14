@@ -21,9 +21,6 @@
     "main": [
       "com.reggarf.mods.better_lib.Better_lib_fabric"
     ],
-    "fabric-datagen": [
-      "com.reggarf.mods.better_lib.datagen.BetterLibFabricDataGenerator"
-    ],
     "modmenu": [
       "com.reggarf.mods.better_lib.config.BetterLibMenuIntegration"
     ]

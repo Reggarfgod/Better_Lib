@@ -4,7 +4,7 @@ plugins {
 
 allprojects {
     group = project.findProperty('mod_group_id') ?: 'com.reggarf.mods'
-    version = project.findProperty('mod_version') ?: '1.0.112'
+    version = project.findProperty('mod_version') ?: '1.0.113'
 
     repositories {
         mavenLocal()
