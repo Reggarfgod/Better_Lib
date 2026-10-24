@@ -59,13 +59,7 @@ public final class VillagerLibRuntime {
     }
 
     public static Optional<VillagerProfession> createProfession(ProfessionDefinition def) {
-        Optional<Holder<PoiType>> poiHolder = VillagerLibTradeTags.resolvePoiHolder(def);
-        if (poiHolder.isEmpty()) {
-            Constants.LOG.error("[VillagerLib] No POI registered for profession '{}'", def.path());
-            return Optional.empty();
-        }
-
-        Holder<PoiType> poi = poiHolder.get();
+        ResourceKey<PoiType> poiKey = VillagerLibTradeTags.poiKey(def);
 
         Int2ObjectMap<ResourceKey<TradeSet>> tradeSetsByLevel = new Int2ObjectOpenHashMap<>();
         for (Map.Entry<Integer, java.util.List<SimpleTrade>> level : def.tradesByLevel().entrySet()) {
@@ -78,7 +72,13 @@ public final class VillagerLibRuntime {
             );
         }
 
-        Predicate<Holder<PoiType>> poiPredicate = holder -> holder.value() == poi.value();
+        Predicate<Holder<PoiType>> poiPredicate = holder -> {
+            if (holder.is(poiKey)) {
+                return true;
+            }
+            Holder<PoiType> cached = getCachedPoiHolder(def.modId() + ":" + def.path());
+            return cached != null && cached.isBound() && holder.value() == cached.value();
+        };
 
         VillagerProfession profession = new VillagerProfession(
                 Component.translatable("entity.villager." + def.modId() + "." + def.path()),

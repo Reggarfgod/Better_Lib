@@ -1,0 +1,16 @@
+{
+  "additional_wants": {
+    "count": 20.0,
+    "id": "minecraft:iron_ingot"
+  },
+  "gives": {
+    "id": "minecraft:diamond_pickaxe"
+  },
+  "max_uses": 3.0,
+  "reputation_discount": 0.05,
+  "wants": {
+    "count": 15.0,
+    "id": "minecraft:emerald"
+  },
+  "xp": 20.0
+}
