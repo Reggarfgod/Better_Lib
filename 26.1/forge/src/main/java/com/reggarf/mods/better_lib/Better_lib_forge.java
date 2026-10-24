@@ -1,6 +1,7 @@
 package com.reggarf.mods.better_lib;
 
 import com.reggarf.mods.better_lib.config.BetterLibMenuIntegration;
+import com.reggarf.mods.better_lib.popup.WelcomePopupForge;
 import com.reggarf.mods.better_lib.popup.manager.WelcomePopupManager;
 import com.reggarf.mods.better_lib.popup.network.WelcomePopupPayload;
 import net.minecraft.resources.Identifier;
@@ -26,6 +27,7 @@ public class Better_lib_forge {
     public Better_lib_forge() {
         Better_lib.LOG.info("Hello Forge world!");
         CommonClass.init();
+        WelcomePopupForge.init();
 
         CHANNEL.messageBuilder(WelcomePopupPayload.class, 0, NetworkDirection.PLAY_TO_CLIENT)
                 .encoder(WelcomePopupPayload::encode)

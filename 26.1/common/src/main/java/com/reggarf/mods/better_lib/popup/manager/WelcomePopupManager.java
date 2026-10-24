@@ -1,5 +1,6 @@
 package com.reggarf.mods.better_lib.popup.manager;
 
+import com.reggarf.mods.better_lib.Better_lib;
 import com.reggarf.mods.better_lib.popup.api.WelcomePopupPlugins;
 import com.reggarf.mods.better_lib.popup.config.WelcomePopupStorage;
 import com.reggarf.mods.better_lib.popup.gui.WelcomePopupScreen;
@@ -24,16 +25,19 @@ public class WelcomePopupManager {
 
     public static void triggerPopup(int ticks, @Nullable String modId, boolean force) {
         if (!WelcomePopupPlugins.hasAny()) {
+            Better_lib.LOG.info("[WelcomePopup] Suppressed: No popup plugins registered");
             return;
         }
 
         if (!force) {
             WelcomePopupStorage.ensureGlobalLoaded();
             if (!WelcomePopupStorage.isGlobalEnabled()) {
+                Better_lib.LOG.info("[WelcomePopup] Suppressed: WelcomePopupStorage.isGlobalEnabled() is false");
                 return;
             }
         }
 
+        Better_lib.LOG.info("[WelcomePopup] Queued popup in {} ticks (targetModId={}, force={})", ticks, modId, force);
         pendingPopup = true;
         delayTicks = ticks;
         targetModId = modId;
@@ -50,6 +54,7 @@ public class WelcomePopupManager {
     public static void openScreenForMod(@Nullable String modId, @Nullable Screen parentScreen) {
         Minecraft mc = Minecraft.getInstance();
         if (mc != null) {
+            Better_lib.LOG.info("[WelcomePopup] Opening WelcomePopupScreen directly for mod: {}", modId);
             mc.execute(() -> mc.setScreen(new WelcomePopupScreen(parentScreen, modId)));
         }
     }
@@ -68,6 +73,7 @@ public class WelcomePopupManager {
             if (mc != null && mc.player != null && mc.level != null) {
                 if (mc.screen == null) {
                     pendingPopup = false;
+                    Better_lib.LOG.info("[WelcomePopup] Ticks elapsed, setting WelcomePopupScreen (targetModId={})", targetModId);
                     mc.setScreen(new WelcomePopupScreen(null, targetModId));
                 } else {
                     // Retry in 20 ticks if player is currently in another screen (e.g. loading or chat)

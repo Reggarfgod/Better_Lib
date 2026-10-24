@@ -24,7 +24,7 @@ public class CommonClass {
 
         // Register Demo Join Message Plugin and Online Messages
         DemoPlugin.register();
-       OnlineMessageLib.registerPlugin(new DemoOnlineMessages());
+        OnlineMessageLib.registerPlugin(new DemoOnlineMessages());
 
         // Register Demo Welcome Popup Plugins
         DemoPopupPlugin.register();
