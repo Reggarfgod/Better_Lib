@@ -95,7 +95,10 @@ public class WelcomePopupScreen extends Screen {
         if (plugin == null) return null;
         WelcomePopupData data = plugin.getPopupData();
         if (data != null) return data;
-        return WelcomePopupData.fromJoinMessageSets(plugin.getModName(), plugin.getAccentColor(), plugin.getMessageSets());
+        return WelcomePopupData.builder()
+                .title(plugin.getModName())
+                .accentColor(plugin.getAccentColor())
+                .build();
     }
 
     public PopupTheme getActiveTheme() {
@@ -407,8 +410,7 @@ public class WelcomePopupScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        this.extractBackground(graphics, mouseX, mouseY, partialTick);
-
+        
         if (plugins.isEmpty()) {
             graphics.centeredText(this.font, Component.literal("No Welcome Popups Registered"), this.width / 2, this.height / 2, 0xFFFFFFFF);
             return;

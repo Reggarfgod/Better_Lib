@@ -50,6 +50,7 @@ sourceSets.main.java {
 }
 
 sourceSets.main.resources {
+    srcDir 'src/generated/resources'
     srcDir file('../common/src/main/resources')
 }
 
@@ -81,7 +82,10 @@ dependencies {
 }
 
 loom {
-    def aw = file("../common/src/main/resources/${mod_id}.accesswidener")
+    def aw = file("src/main/resources/better_lib.accesswidener")
+    if (!aw.exists()) {
+        aw = file("../common/src/main/resources/${mod_id}.accesswidener")
+    }
     if (aw.exists()) {
         accessWidenerPath.set(aw)
     }
@@ -131,19 +135,19 @@ afterEvaluate {
 
 processResources {
     var replaceProperties = [\
-            minecraft_version    : minecraft_version_26,
-            fabric_loader_version: fabric_loader_version_26,
-            java_version         : java_version_26,
-            mod_id               : mod_id,
-            mod_name             : mod_name,
-            mod_version          : mod_version,
-            version              : mod_version,
-            mod_authors          : mod_authors,
-            mod_author           : mod_authors,
-            mod_description      : mod_description,
-            description          : mod_description,
-            mod_license          : mod_license,
-            license              : mod_license
+            minecraft_version    : minecraft_version_26,\
+            fabric_loader_version: fabric_loader_version_26,\
+            java_version         : java_version_26,\
+            mod_id               : mod_id,\
+            mod_name             : mod_name,\
+            mod_version          : mod_version,\
+            version              : mod_version,\
+            mod_authors          : mod_authors,\
+            mod_author           : mod_authors,\
+            mod_description      : mod_description,\
+            description          : mod_description,\
+            mod_license          : mod_license,\
+            license              : mod_license\
     ]
     inputs.properties replaceProperties
     filesMatching(['fabric.mod.json', 'pack.mcmeta']) {\

@@ -9,7 +9,6 @@ import java.util.ServiceLoader;
  */
 public final class Services {
 
-    public static final VillagerRegistryPlatform PLATFORM = load(VillagerRegistryPlatform.class);
     public static final ModPlatformHelper MODS = load(ModPlatformHelper.class);
 
     private Services() {

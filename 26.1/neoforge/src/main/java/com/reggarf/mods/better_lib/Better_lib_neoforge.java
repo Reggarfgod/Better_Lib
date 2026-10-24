@@ -4,14 +4,26 @@ import com.reggarf.mods.better_lib.configs.demo.BetterLibConfigScreen;
 import com.reggarf.mods.better_lib.gui.screen.BetterConfigScreenHandler;
 import com.reggarf.mods.better_lib.popup.manager.WelcomePopupManager;
 import com.reggarf.mods.better_lib.popup.network.WelcomePopupPayload;
+import com.reggarf.mods.better_lib.villager.VillagerLibRegistry;
+import com.reggarf.mods.better_lib.villager.datagen.PoiTypeTagsProvider;
+import com.reggarf.mods.better_lib.villager.datagen.TradeSetDataProvider;
+import com.reggarf.mods.better_lib.villager.datagen.TradeTagsProvider;
+import net.minecraft.core.RegistrySetBuilder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.data.DataGenerator;
+import net.minecraft.data.PackOutput;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.common.data.DatapackBuiltinEntriesProvider;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+
+import java.util.Set;
 
 @Mod(Better_lib.MODID)
 public class Better_lib_neoforge {
@@ -19,6 +31,10 @@ public class Better_lib_neoforge {
     public Better_lib_neoforge(IEventBus modBus, ModContainer modContainer) {
         Better_lib.LOG.info("Hello NeoForge world!");
         CommonClass.init();
+
+        modBus.addListener(VillagerLibNeoForgeRegistrar::onRegister);
+        modBus.addListener(GatherDataEvent.Client.class, event -> gatherData(event));
+        modBus.addListener(GatherDataEvent.Server.class, event -> gatherData(event));
 
         modBus.addListener(this::registerPayloads);
 
@@ -29,6 +45,32 @@ public class Better_lib_neoforge {
             );
             modBus.addListener(this::onClientSetup);
         }
+    }
+
+    private void gatherData(GatherDataEvent event) {
+        Better_lib.LOG.info("[VillagerLib] gatherData fired!");
+
+        DataGenerator generator = event.getGenerator();
+        PackOutput packOutput = generator.getPackOutput();
+        var lookupProvider = event.getLookupProvider();
+
+        RegistrySetBuilder registrySetBuilder = new RegistrySetBuilder()
+                .add(Registries.VILLAGER_TRADE, VillagerLibRegistry::bootstrapTrades);
+
+        generator.addProvider(true, new TradeTagsProvider(packOutput, lookupProvider));
+        generator.addProvider(true, new PoiTypeTagsProvider(packOutput, lookupProvider));
+        generator.addProvider(true, new TradeSetDataProvider(packOutput));
+        generator.addProvider(
+                true,
+                new DatapackBuiltinEntriesProvider(
+                        packOutput,
+                        lookupProvider,
+                        registrySetBuilder,
+                        Set.of(Better_lib.MODID)
+                )
+        );
+
+        Better_lib.LOG.info("[VillagerLib] gatherData: provider added");
     }
 
     private void registerPayloads(RegisterPayloadHandlersEvent event) {
