@@ -1,0 +1,17 @@
+{
+  "additional_wants": {
+    "count": 16,
+    "id": "minecraft:raw_copper"
+  },
+  "gives": {
+    "count": 12,
+    "id": "minecraft:copper_ingot"
+  },
+  "max_uses": 10,
+  "reputation_discount": 0.05,
+  "wants": {
+    "count": 4,
+    "id": "minecraft:emerald"
+  },
+  "xp": 5
+}

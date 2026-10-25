@@ -1,0 +1,6 @@
+{
+  "allow_duplicates": true,
+  "amount": 1,
+  "random_sequence": "better_lib:trade_set/andesite_worker/level_2",
+  "trades": "#better_lib:andesite_worker/level_2"
+}
