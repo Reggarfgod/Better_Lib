@@ -1,8 +1,5 @@
 package com.reggarf.mods.better_lib.popup.api;
 
-import com.reggarf.mods.better_lib.message.api.JoinMessagePlugin;
-import com.reggarf.mods.better_lib.message.api.JoinMessagePlugins;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -49,40 +46,12 @@ public class WelcomePopupPlugins {
     }
 
     public static Collection<WelcomePopupPlugin> all() {
-        // Collect registered WelcomePopupPlugins + adapt any JoinMessagePlugin that doesn't have a popup plugin yet
-        Map<String, WelcomePopupPlugin> combined = new LinkedHashMap<>(PLUGINS);
-
-        for (JoinMessagePlugin jPlugin : JoinMessagePlugins.all()) {
-            if (!combined.containsKey(jPlugin.getModId()) && jPlugin.enabled()) {
-                combined.put(jPlugin.getModId(), new WelcomePopupPlugin() {
-                    @Override
-                    public String getModId() {
-                        return jPlugin.getModId();
-                    }
-
-                    @Override
-                    public boolean enabled() {
-                        return jPlugin.enabled();
-                    }
-
-                    @Override
-                    public WelcomePopupData getPopupData() {
-                        return WelcomePopupData.fromJoinMessageSets(
-                                "Welcome from " + jPlugin.getModId(),
-                                0xFF5CB85C,
-                                jPlugin.getMessageSets()
-                        );
-                    }
-                });
-            }
-        }
-
-        return combined.values();
+        return PLUGINS.values();
     }
 
     public static List<WelcomePopupPlugin> getEnabledPlugins() {
         List<WelcomePopupPlugin> result = new ArrayList<>();
-        for (WelcomePopupPlugin plugin : all()) {
+        for (WelcomePopupPlugin plugin : PLUGINS.values()) {
             if (plugin.enabled()) {
                 result.add(plugin);
             }
@@ -91,36 +60,10 @@ public class WelcomePopupPlugins {
     }
 
     public static WelcomePopupPlugin get(String modId) {
-        WelcomePopupPlugin direct = PLUGINS.get(modId);
-        if (direct != null) return direct;
-
-        JoinMessagePlugin jPlugin = JoinMessagePlugins.get(modId);
-        if (jPlugin != null) {
-            return new WelcomePopupPlugin() {
-                @Override
-                public String getModId() {
-                    return jPlugin.getModId();
-                }
-
-                @Override
-                public boolean enabled() {
-                    return jPlugin.enabled();
-                }
-
-                @Override
-                public WelcomePopupData getPopupData() {
-                    return WelcomePopupData.fromJoinMessageSets(
-                            "Welcome from " + jPlugin.getModId(),
-                            0xFF5CB85C,
-                            jPlugin.getMessageSets()
-                    );
-                }
-            };
-        }
-        return null;
+        return PLUGINS.get(modId);
     }
 
     public static boolean hasAny() {
-        return !PLUGINS.isEmpty() || !JoinMessagePlugins.all().isEmpty();
+        return !PLUGINS.isEmpty();
     }
 }

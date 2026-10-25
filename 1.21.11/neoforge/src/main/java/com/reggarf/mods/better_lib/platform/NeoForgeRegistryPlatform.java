@@ -5,6 +5,8 @@ import com.reggarf.mods.better_lib.villagers.ProfessionEntry;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.ai.village.poi.PoiType;
 import net.minecraft.world.entity.npc.villager.VillagerProfession;
@@ -29,6 +31,7 @@ public class NeoForgeRegistryPlatform implements VillagerRegistryPlatform {
     private final Map<String, DeferredRegister<PoiType>> poiRegistries = new HashMap<>();
     private final Map<String, DeferredRegister<VillagerProfession>> professionRegistries = new HashMap<>();
     private final Set<String> flushed = new HashSet<>();
+    private boolean tradesListenerRegistered = false;
 
     private static final List<ProfessionEntry> ALL_ENTRIES = new ArrayList<>();
 
@@ -49,10 +52,11 @@ public class NeoForgeRegistryPlatform implements VillagerRegistryPlatform {
         DeferredRegister<VillagerProfession> registry = professionRegistries.computeIfAbsent(modid,
                 id -> DeferredRegister.create(BuiltInRegistries.VILLAGER_PROFESSION, id));
 
+        ResourceKey<PoiType> poiKey = ResourceKey.create(BuiltInRegistries.POINT_OF_INTEREST_TYPE.key(), Identifier.fromNamespaceAndPath(modid, name + "_poi"));
         return registry.register(name, () -> new VillagerProfession(
                 Component.literal(name),
-                holder -> holder.value() == poi.value(),
-                holder -> holder.value() == poi.value(),
+                holder -> (poiKey != null && holder.is(poiKey)) || (poi.isBound() && holder.value() == poi.value()),
+                holder -> (poiKey != null && holder.is(poiKey)) || (poi.isBound() && holder.value() == poi.value()),
                 ImmutableSet.of(), ImmutableSet.of(), workSound));
     }
 
@@ -81,7 +85,10 @@ public class NeoForgeRegistryPlatform implements VillagerRegistryPlatform {
             professions.register(modBus);
         }
 
-        NeoForge.EVENT_BUS.addListener(this::onVillagerTrades);
+        if (!tradesListenerRegistered) {
+            NeoForge.EVENT_BUS.addListener(this::onVillagerTrades);
+            tradesListenerRegistered = true;
+        }
     }
 
     private void onVillagerTrades(VillagerTradesEvent event) {

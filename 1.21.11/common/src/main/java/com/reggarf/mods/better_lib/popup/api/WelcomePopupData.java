@@ -1,6 +1,5 @@
 package com.reggarf.mods.better_lib.popup.api;
 
-import com.reggarf.mods.better_lib.message.api.JoinMessageSet;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
@@ -75,34 +74,6 @@ public class WelcomePopupData {
 
     public List<WelcomePopupButton> getButtons() {
         return buttons;
-    }
-
-    public static WelcomePopupData fromJoinMessageSets(String title, int accentColor, List<JoinMessageSet> sets) {
-        Builder builder = builder().title(title).accentColor(accentColor);
-        for (JoinMessageSet set : sets) {
-            for (JoinMessageSet.TextEntry text : set.getTextEntries()) {
-                if (text.text().isEmpty()) {
-                    builder.addBlankLine();
-                } else {
-                    builder.addText(text.text(), text.colorRgb());
-                }
-            }
-            for (JoinMessageSet.LinkEntry link : set.getLinkEntries()) {
-                String labelLower = link.label().toLowerCase();
-                if (labelLower.contains("discord")) {
-                    builder.addButton(WelcomePopupButton.discord(link.url()));
-                } else if (labelLower.contains("bug") || labelLower.contains("issue") || labelLower.contains("report")) {
-                    builder.addButton(WelcomePopupButton.reportBug(link.url()));
-                } else if (labelLower.contains("changelog")) {
-                    builder.addButton(WelcomePopupButton.changelog(link.url()));
-                } else if (labelLower.contains("github") || labelLower.contains("source")) {
-                    builder.addButton(WelcomePopupButton.github(link.url()));
-                } else {
-                    builder.addButton(WelcomePopupButton.secondary(link.label(), link.url(), link.description()));
-                }
-            }
-        }
-        return builder.build();
     }
 
     public static class Builder {

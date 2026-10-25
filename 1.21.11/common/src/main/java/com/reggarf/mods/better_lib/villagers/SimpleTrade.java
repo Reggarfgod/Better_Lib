@@ -5,6 +5,7 @@ import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.level.ItemLike;
 
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * Fluent builder for a single villager trade. Identical API to the original
@@ -12,20 +13,14 @@ import java.util.Objects;
  * ItemListing via SimpleItemListing instead of Forge's
  * BasicItemListing), so every mod using SimpleTrade needs zero changes.
  *
- * Example:
- *   SimpleTrade.create()
- *       .cost(Items.EMERALD, 9)
- *       .cost2(AllBlocks.COGWHEEL, 6)     // optional - omit for a single-cost trade
- *       .result(AllBlocks.GEARBOX, 2)
- *       .maxTrades(5)
- *       .xp(3)
- *       .priceMultiplier(0.07f)
+ * Cost and result construction is deferred until getOffer() time to prevent
+ * "Components not bound yet" NullPointerExceptions during early mod initialization.
  */
 public final class SimpleTrade {
 
-    private ItemCost cost;
-    private ItemCost cost2; // optional
-    private ItemStack result;
+    private Supplier<ItemCost> costSupplier;
+    private Supplier<ItemCost> cost2Supplier; // optional
+    private Supplier<ItemStack> resultSupplier;
     private int maxTrades = 5;
     private int xp = 5;
     private float priceMultiplier = 0.05f;
@@ -39,19 +34,44 @@ public final class SimpleTrade {
 
     /** The item(s) the villager wants from the player. Required. */
     public SimpleTrade cost(ItemLike item, int count) {
-        this.cost = new ItemCost(item, count);
+        this.costSupplier = () -> new ItemCost(item, count);
+        return this;
+    }
+
+    public SimpleTrade cost(Supplier<? extends ItemLike> item, int count) {
+        this.costSupplier = () -> new ItemCost(item.get(), count);
         return this;
     }
 
     /** Optional second cost item - omit entirely for a single-item trade. */
     public SimpleTrade cost2(ItemLike item, int count) {
-        this.cost2 = new ItemCost(item, count);
+        this.cost2Supplier = () -> new ItemCost(item, count);
+        return this;
+    }
+
+    public SimpleTrade cost2(Supplier<? extends ItemLike> item, int count) {
+        this.cost2Supplier = () -> new ItemCost(item.get(), count);
         return this;
     }
 
     /** What the player receives. Required. */
     public SimpleTrade result(ItemLike item, int count) {
-        this.result = new ItemStack(item, count);
+        this.resultSupplier = () -> new ItemStack(item, count);
+        return this;
+    }
+
+    public SimpleTrade result(Supplier<? extends ItemLike> item, int count) {
+        this.resultSupplier = () -> new ItemStack(item.get(), count);
+        return this;
+    }
+
+    public SimpleTrade result(ItemStack stack) {
+        this.resultSupplier = stack::copy;
+        return this;
+    }
+
+    public SimpleTrade result(Supplier<ItemStack> stackSupplier) {
+        this.resultSupplier = stackSupplier;
         return this;
     }
 
@@ -74,8 +94,8 @@ public final class SimpleTrade {
     }
 
     ItemListing build() {
-        Objects.requireNonNull(cost, "SimpleTrade: cost(...) must be set");
-        Objects.requireNonNull(result, "SimpleTrade: result(...) must be set");
-        return new SimpleItemListing(cost, cost2, result, maxTrades, xp, priceMultiplier);
+        Objects.requireNonNull(costSupplier, "SimpleTrade: cost(...) must be set");
+        Objects.requireNonNull(resultSupplier, "SimpleTrade: result(...) must be set");
+        return new SimpleItemListing(costSupplier, cost2Supplier, resultSupplier, maxTrades, xp, priceMultiplier);
     }
 }

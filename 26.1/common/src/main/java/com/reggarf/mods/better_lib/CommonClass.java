@@ -23,12 +23,12 @@ public class CommonClass {
         BetterLibConfigs.init();
 
         // Register Demo Join Message Plugin and Online Messages
-        DemoPlugin.register();
-        OnlineMessageLib.registerPlugin(new DemoOnlineMessages());
+        //DemoPlugin.register();
+        //OnlineMessageLib.registerPlugin(new DemoOnlineMessages());
 
         // Register Demo Welcome Popup Plugins
-        DemoPopupPlugin.register();
-        DemoCrystalsPlugin.register();
+        //DemoPopupPlugin.register();
+        //DemoCrystalsPlugin.register();
         // JSON-defined professions (data/better_lib/villagers/*.json)
         registerJsonVillagers();
     }

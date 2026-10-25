@@ -37,6 +37,7 @@ public class ForgeRegistryPlatform implements VillagerRegistryPlatform {
     private final Map<String, DeferredRegister<PoiType>> poiRegistries = new HashMap<>();
     private final Map<String, DeferredRegister<VillagerProfession>> professionRegistries = new HashMap<>();
     private final Set<String> flushed = new HashSet<>();
+    private boolean tradesListenerRegistered = false;
 
     private static final List<ProfessionEntry> ALL_ENTRIES = new ArrayList<>();
 
@@ -58,9 +59,10 @@ public class ForgeRegistryPlatform implements VillagerRegistryPlatform {
         DeferredRegister<VillagerProfession> registry = professionRegistries.computeIfAbsent(modid,
                 id -> DeferredRegister.create(Registries.VILLAGER_PROFESSION, id));
 
+        ResourceKey<PoiType> poiKey = ResourceKey.create(Registries.POINT_OF_INTEREST_TYPE, new ResourceLocation(modid, name + "_poi"));
         RegistryObject<VillagerProfession> obj = registry.register(name, () -> new VillagerProfession(name,
-                holder -> holder.value() == poi.value(),
-                holder -> holder.value() == poi.value(),
+                holder -> holder.is(poiKey) || (poi.isBound() && holder.value() == poi.value()),
+                holder -> holder.is(poiKey) || (poi.isBound() && holder.value() == poi.value()),
                 ImmutableSet.of(), ImmutableSet.of(), workSound));
         return new LazyHolder<>(obj);
     }
@@ -88,7 +90,10 @@ public class ForgeRegistryPlatform implements VillagerRegistryPlatform {
             professions.register(modBus);
         }
 
-        MinecraftForge.EVENT_BUS.addListener(this::onVillagerTrades);
+        if (!tradesListenerRegistered) {
+            MinecraftForge.EVENT_BUS.addListener(this::onVillagerTrades);
+            tradesListenerRegistered = true;
+        }
     }
 
     private void onVillagerTrades(VillagerTradesEvent event) {
@@ -102,8 +107,10 @@ public class ForgeRegistryPlatform implements VillagerRegistryPlatform {
 
             entry.trades().forEach((level, listingSuppliers) -> {
                 List<VillagerTrades.ItemListing> levelTrades = event.getTrades().get(level);
-                for (Supplier<VillagerTrades.ItemListing> supplier : listingSuppliers) {
-                    levelTrades.add(supplier.get());
+                if (levelTrades != null) {
+                    for (Supplier<VillagerTrades.ItemListing> supplier : listingSuppliers) {
+                        levelTrades.add(supplier.get());
+                    }
                 }
             });
         }
@@ -181,7 +188,7 @@ public class ForgeRegistryPlatform implements VillagerRegistryPlatform {
 
         @Override
         public Kind kind() {
-            return Kind.REFERENCE;
+            return delegate().kind();
         }
 
         @Override

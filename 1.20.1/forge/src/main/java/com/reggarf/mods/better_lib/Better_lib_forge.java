@@ -7,9 +7,9 @@ import com.reggarf.mods.better_lib.popup.network.WelcomePopupPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
@@ -36,9 +36,7 @@ public class Better_lib_forge {
                 (msg, ctxSupplier) -> {
                     var ctx = ctxSupplier.get();
                     ctx.enqueueWork(() -> {
-                        if (FMLEnvironment.dist.isClient()) {
-                            WelcomePopupManager.triggerPopup(msg.delayTicks());
-                        }
+                        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> WelcomePopupManager.triggerPopup(msg.delayTicks()));
                     });
                     ctx.setPacketHandled(true);
                 }

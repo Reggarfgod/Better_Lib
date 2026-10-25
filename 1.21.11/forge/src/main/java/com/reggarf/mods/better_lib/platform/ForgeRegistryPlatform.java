@@ -37,6 +37,7 @@ public class ForgeRegistryPlatform implements VillagerRegistryPlatform {
     private final Map<String, DeferredRegister<PoiType>> poiRegistries = new HashMap<>();
     private final Map<String, DeferredRegister<VillagerProfession>> professionRegistries = new HashMap<>();
     private final Set<String> flushed = new HashSet<>();
+    private boolean tradesListenerRegistered = false;
 
     private static final List<ProfessionEntry> ALL_ENTRIES = new ArrayList<>();
 
@@ -58,10 +59,11 @@ public class ForgeRegistryPlatform implements VillagerRegistryPlatform {
         DeferredRegister<VillagerProfession> registry = professionRegistries.computeIfAbsent(modid,
                 id -> DeferredRegister.create(Registries.VILLAGER_PROFESSION, id));
 
+        ResourceKey<PoiType> poiKey = ResourceKey.create(Registries.POINT_OF_INTEREST_TYPE, Identifier.fromNamespaceAndPath(modid, name + "_poi"));
         RegistryObject<VillagerProfession> obj = registry.register(name, () -> new VillagerProfession(
                 Component.literal(name),
-                holder -> holder.value() == poi.value(),
-                holder -> holder.value() == poi.value(),
+                holder -> (poiKey != null && holder.is(poiKey)) || (poi.isBound() && holder.value() == poi.value()),
+                holder -> (poiKey != null && holder.is(poiKey)) || (poi.isBound() && holder.value() == poi.value()),
                 ImmutableSet.of(), ImmutableSet.of(), workSound));
         return new LazyHolder<>(obj);
     }
@@ -70,7 +72,6 @@ public class ForgeRegistryPlatform implements VillagerRegistryPlatform {
     public void registerTradeSource(String modid, ProfessionEntry entry) {
         ALL_ENTRIES.add(entry);
     }
-
 
     @Override
     public void finishRegistration(String modid) {
@@ -89,7 +90,10 @@ public class ForgeRegistryPlatform implements VillagerRegistryPlatform {
             professions.register(modBus);
         }
 
-        VillagerTradesEvent.BUS.addListener(this::onVillagerTrades);
+        if (!tradesListenerRegistered) {
+            VillagerTradesEvent.BUS.addListener(this::onVillagerTrades);
+            tradesListenerRegistered = true;
+        }
     }
 
     private void onVillagerTrades(VillagerTradesEvent event) {
@@ -114,11 +118,7 @@ public class ForgeRegistryPlatform implements VillagerRegistryPlatform {
 
     /**
      * A {@link Holder} that defers resolving the backing {@link RegistryObject}'s holder until
-     * it is actually used. Calling {@code RegistryObject.getHolder()} too early (e.g. during mod
-     * construction, before Forge's RegisterEvent has fired for this registry) throws
-     * "Registry is already frozen" because the vanilla registry hasn't been unlocked for writes
-     * yet. By the time anything calls value()/is()/etc. on this wrapper - typically much later,
-     * during actual gameplay - registration has long since completed.
+     * it is actually used.
      */
     private static final class LazyHolder<T> implements Holder<T> {
         private final RegistryObject<T> object;
@@ -189,7 +189,7 @@ public class ForgeRegistryPlatform implements VillagerRegistryPlatform {
 
         @Override
         public Kind kind() {
-            return Kind.REFERENCE;
+            return delegate().kind();
         }
 
         @Override

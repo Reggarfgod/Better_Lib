@@ -93,7 +93,10 @@ public class WelcomePopupScreen extends Screen {
         if (plugin == null) return null;
         WelcomePopupData data = plugin.getPopupData();
         if (data != null) return data;
-        return WelcomePopupData.fromJoinMessageSets(plugin.getModName(), plugin.getAccentColor(), plugin.getMessageSets());
+        return WelcomePopupData.builder()
+                .title(plugin.getModName())
+                .accentColor(plugin.getAccentColor())
+                .build();
     }
 
     public PopupTheme getActiveTheme() {

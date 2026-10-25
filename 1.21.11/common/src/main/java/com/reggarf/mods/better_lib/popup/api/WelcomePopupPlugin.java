@@ -1,10 +1,8 @@
 package com.reggarf.mods.better_lib.popup.api;
 
-import com.reggarf.mods.better_lib.message.api.JoinMessageSet;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 
 public interface WelcomePopupPlugin {
 
@@ -53,17 +51,9 @@ public interface WelcomePopupPlugin {
 
     /**
      * @return The full popup content specification.
-     * If null, getMessageSets() will be adapted automatically as fallback.
      */
     @Nullable
     default WelcomePopupData getPopupData() {
         return null;
-    }
-
-    /**
-     * @return Optional fallback list of JoinMessageSet objects.
-     */
-    default List<JoinMessageSet> getMessageSets() {
-        return List.of();
     }
 }

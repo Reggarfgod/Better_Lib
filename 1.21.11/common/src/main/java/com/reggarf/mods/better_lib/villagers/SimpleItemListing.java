@@ -7,25 +7,32 @@ import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * An ItemListing (pure vanilla style) that supports one or two cost items,
  * a result, max uses, xp, and a demand-based price multiplier.
+ * Defers ItemCost and ItemStack creation until getOffer() is called, so
+ * mod initialization is never subject to "Components not bound yet".
  */
 final class SimpleItemListing implements ItemListing {
 
-    private final ItemCost cost;
-    private final ItemCost cost2; // may be null - single-cost trade
-    private final ItemStack result;
+    private final Supplier<ItemCost> costSupplier;
+    private final Supplier<ItemCost> cost2Supplier; // may be null - single-cost trade
+    private final Supplier<ItemStack> resultSupplier;
     private final int maxTrades;
     private final int xp;
     private final float priceMultiplier;
 
-    SimpleItemListing(ItemCost cost, ItemCost cost2, ItemStack result,
-                       int maxTrades, int xp, float priceMultiplier) {
-        this.cost = cost;
-        this.cost2 = cost2;
-        this.result = result;
+    private ItemCost cachedCost;
+    private ItemCost cachedCost2;
+    private ItemStack cachedResult;
+
+    SimpleItemListing(Supplier<ItemCost> costSupplier, Supplier<ItemCost> cost2Supplier, Supplier<ItemStack> resultSupplier,
+                      int maxTrades, int xp, float priceMultiplier) {
+        this.costSupplier = costSupplier;
+        this.cost2Supplier = cost2Supplier;
+        this.resultSupplier = resultSupplier;
         this.maxTrades = maxTrades;
         this.xp = xp;
         this.priceMultiplier = priceMultiplier;
@@ -33,7 +40,16 @@ final class SimpleItemListing implements ItemListing {
 
     @Override
     public MerchantOffer getOffer(net.minecraft.server.level.ServerLevel serverLevel, Entity trader, RandomSource random) {
-        return new MerchantOffer(cost, Optional.ofNullable(cost2), result.copy(),
+        if (cachedCost == null && costSupplier != null) {
+            cachedCost = costSupplier.get();
+        }
+        if (cachedCost2 == null && cost2Supplier != null) {
+            cachedCost2 = cost2Supplier.get();
+        }
+        if (cachedResult == null && resultSupplier != null) {
+            cachedResult = resultSupplier.get();
+        }
+        return new MerchantOffer(cachedCost, Optional.ofNullable(cachedCost2), cachedResult != null ? cachedResult.copy() : ItemStack.EMPTY,
                 maxTrades, xp, priceMultiplier);
     }
 }

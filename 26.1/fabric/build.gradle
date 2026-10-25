@@ -25,6 +25,8 @@ base {
     archivesName = "${mod_id}-fabric-26.1"
 }
 
+version = project.findProperty('mod_version_26') ?: mod_version
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(project.java_version_26 as int)
@@ -140,8 +142,8 @@ processResources {
             java_version         : java_version_26,\
             mod_id               : mod_id,\
             mod_name             : mod_name,\
-            mod_version          : mod_version,\
-            version              : mod_version,\
+            mod_version          : project.findProperty('mod_version_26') ?: mod_version,\
+            version              : project.findProperty('mod_version_26') ?: mod_version,\
             mod_authors          : mod_authors,\
             mod_author           : mod_authors,\
             mod_description      : mod_description,\

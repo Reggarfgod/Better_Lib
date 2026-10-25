@@ -1,13 +1,10 @@
 package com.reggarf.mods.better_lib.demo;
 
-import com.reggarf.mods.better_lib.message.api.JoinMessageSet;
 import com.reggarf.mods.better_lib.popup.api.PopupTheme;
 import com.reggarf.mods.better_lib.popup.api.WelcomePopupButton;
 import com.reggarf.mods.better_lib.popup.api.WelcomePopupData;
 import com.reggarf.mods.better_lib.popup.api.WelcomePopupPlugin;
 import com.reggarf.mods.better_lib.popup.api.WelcomePopupPlugins;
-
-import java.util.List;
 
 public class DemoCrystalsPlugin implements WelcomePopupPlugin {
 
@@ -34,22 +31,6 @@ public class DemoCrystalsPlugin implements WelcomePopupPlugin {
     @Override
     public PopupTheme getTheme() {
         return PopupTheme.CYBER;
-    }
-
-    @Override
-    public List<JoinMessageSet> getMessageSets() {
-        return List.of(
-                new JoinMessageSet()
-                        .addText("Welcome to Magic Crystals!", 0xFFD700)
-                        .addBlankLine()
-                        .addLink("Discord", "https://discord.gg/bettermods", 0x00AAFF, "(Community)")
-                        .addLink("GitHub", "https://github.com/reggarf/better_lib", 0xAAAAAA, "(Source / Issues)"),
-
-                new JoinMessageSet()
-                        .addBlankLine()
-                        .addText("New 2.0 Update \u2014 New crystals added!", 0x00FF66)
-                        .addLink("Read Changelog", "https://betterlib.com/changelog", 0x00FFFF, "")
-        );
     }
 
     @Override

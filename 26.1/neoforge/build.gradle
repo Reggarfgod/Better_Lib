@@ -5,7 +5,7 @@ plugins {
     id 'net.neoforged.moddev' version '2.0.148'
 }
 
-version = mod_version
+version = project.findProperty('mod_version_26') ?: mod_version
 group = mod_group_id
 
 repositories {
@@ -101,8 +101,8 @@ processResources {
             mod_name                     : mod_name,
             mod_license                  : mod_license,
             license                      : mod_license,
-            mod_version                  : mod_version,
-            version                      : mod_version,
+            mod_version                  : project.findProperty('mod_version_26') ?: mod_version,
+            version                      : project.findProperty('mod_version_26') ?: mod_version,
             mod_authors                  : mod_authors,
             mod_author                   : mod_authors,
             mod_description              : mod_description,

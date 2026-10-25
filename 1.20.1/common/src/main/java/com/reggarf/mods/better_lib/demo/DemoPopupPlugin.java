@@ -1,14 +1,11 @@
 package com.reggarf.mods.better_lib.demo;
 
 import com.reggarf.mods.better_lib.Better_lib;
-import com.reggarf.mods.better_lib.message.api.JoinMessageSet;
 import com.reggarf.mods.better_lib.popup.api.WelcomePopupButton;
 import com.reggarf.mods.better_lib.popup.api.WelcomePopupData;
 import com.reggarf.mods.better_lib.popup.api.WelcomePopupPlugin;
 import com.reggarf.mods.better_lib.popup.api.WelcomePopupPlugins;
 import net.minecraft.resources.ResourceLocation;
-
-import java.util.List;
 
 public class DemoPopupPlugin implements WelcomePopupPlugin {
 
@@ -35,23 +32,6 @@ public class DemoPopupPlugin implements WelcomePopupPlugin {
     @Override
     public ResourceLocation getIcon() {
         return new ResourceLocation(Better_lib.MODID, "textures/gui/icon.png");
-    }
-
-    @Override
-    public List<JoinMessageSet> getMessageSets() {
-        return List.of(
-                new JoinMessageSet()
-                        .addText("Welcome to Better Lib!", 0x5CB85C)
-                        .addBlankLine()
-                        .addLink("Discord", "https://discord.gg/bettermods", 0x00AAFF, "(Community)")
-                        .addLink("Report Bugs", "https://github.com/Reggarfgod/Better_Lib/issues", 0x5CB85C, "(Bug Tracker)")
-                        .addLink("GitHub", "https://github.com/reggarf/better_lib", 0xAAAAAA, "(Source / Issues)"),
-
-                new JoinMessageSet()
-                        .addBlankLine()
-                        .addText("New 2.0 Update \u2014 Welcome popup & mod list added!", 0x00FF66)
-                        .addLink("Read Changelog", "https://betterlib.com/changelog", 0x00FFFF, "")
-        );
     }
 
     @Override

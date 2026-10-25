@@ -1,6 +1,7 @@
 package com.reggarf.mods.better_lib.configs.demo;
 
 import com.reggarf.mods.better_lib.configs.BetterLibConfigApi;
+import com.reggarf.mods.better_lib.configs.ui.BaseConfigScreen;
 import net.minecraft.client.gui.screens.Screen;
 
 public class BetterLibConfigScreen {
@@ -18,13 +19,21 @@ public class BetterLibConfigScreen {
 	 * {@code BetterLibConfigScreen.ModScreen(parent, "mymod")}
 	 */
 	public static Screen ModScreen(Screen parent, String modId) {
-		return BetterLibConfigApi.createScreen(parent, modId);
+		return createScreen(parent, modId);
 	}
 
 	/**
 	 * Convenience alias for {@link #ModScreen(Screen, String)}.
 	 */
 	public static Screen createScreen(Screen parent, String modId) {
-		return BetterLibConfigApi.createScreen(parent, modId);
+		BaseConfigScreen screen = new BaseConfigScreen(parent, modId);
+		BetterLibConfigApi.ModConfigEntry entry = BetterLibConfigApi.get(modId);
+		if (entry != null) {
+			if (entry.background != null) {
+				screen.withBackground(entry.background);
+			}
+			screen.withConfigs(entry.client, entry.common, entry.server);
+		}
+		return screen;
 	}
 }

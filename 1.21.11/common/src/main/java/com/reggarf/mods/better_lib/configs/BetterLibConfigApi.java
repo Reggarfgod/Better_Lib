@@ -1,8 +1,6 @@
 package com.reggarf.mods.better_lib.configs;
 
 import com.reggarf.mods.better_lib.configs.format.ConfigFormat;
-import com.reggarf.mods.better_lib.configs.ui.BaseConfigScreen;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
@@ -171,20 +169,5 @@ public class BetterLibConfigApi {
 
     public static Set<String> getRegisteredModIds() {
         return Collections.unmodifiableSet(MOD_CONFIGS.keySet());
-    }
-
-    /**
-     * Creates a fully populated config Screen for the specified mod.
-     */
-    public static Screen createScreen(Screen parent, String modId) {
-        BaseConfigScreen screen = new BaseConfigScreen(parent, modId);
-        ModConfigEntry entry = get(modId);
-        if (entry != null) {
-            if (entry.background != null) {
-                screen.withBackground(entry.background);
-            }
-            screen.withConfigs(entry.client, entry.common, entry.server);
-        }
-        return screen;
     }
 }

@@ -1,5 +1,19 @@
 # Better_Lib Changelog
 
+## Version 1.0.113
+
+### 🌟 What's New
+- **Welcome Popup Messages**: Added a customizable welcome popup system to show helpful messages, links, and news when players join a world or start up the game.
+- **Modern Settings Menu**: Redesigned in-game config screens with clean buttons, sliders, color pickers, and smooth animations.
+- **Manage Other Mod Settings**: Conveniently view and change configuration options for your other installed mods in one simple screen.
+
+### 🔧 Fixes & Improvements
+- **Villager & Workstation Fixes**: Fixed custom villager professions, job workstations, and custom trades so villagers work properly and trade reliably.
+- **Multi-Loader Compatibility**: Fixed issues and improved stability across Fabric, Forge, and NeoForge on Minecraft 1.20.1, 1.21.1, 1.21.11, and 26.1+.
+- **User Interface Polish**: Fixed text box inputs, visual styling, and overall responsiveness.
+
+---
+
 ## Version 1.0.112 (Multi-Version & Multi-Loader Architecture)
 
 ### Multi-Version Environment Overhaul
